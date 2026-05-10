@@ -369,7 +369,7 @@ DataSearcher отлично работает на Deepseek V4 Flash — пото
 ```bash
 # Backend
 cd backend
-cp .env.example .env
+cp env.example .env
 # Отредактируй .env — укажи LLM URL и сгенерируй JWT_SECRET
 pip install -r requirements.txt
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
