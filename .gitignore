@@ -1,0 +1,61 @@
+# ── Secrets (НИКОГДА не коммитить!) ──────────
+.env
+.env.*
+!.env.example
+!.env.example.*
+*.pem
+*.key
+
+# ── Python ──────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Databases ───────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Uploads / data ──────────────────────────
+uploads/
+backend/uploads/
+backend/static/
+
+# ── Node / Frontend ─────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ── IDE ─────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker volumes ──────────────────────────
+postgres_data/
+mysql_data/
+clickhouse_data/
+
+# ── Test artifacts ──────────────────────────
+test_report.pdf
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Temp / misc ─────────────────────────────
+*.bak
+*.tmp
+*.log
+
+# ── Project copy (не публиковать) ───────────
+github/
