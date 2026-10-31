@@ -20,6 +20,8 @@
 Оба типа делят одно ядро: 46 инструментов, read-only guard, PII-маскирование,
 Knowledge Base, sqlglot-трансляцию SQL и коннекторы (PostgreSQL, MySQL, ClickHouse, SQLite, REST API).
 
+![DataSearcher — Web Interface](docs/screenshots/07_workspace_analysis.png)
+
 ---
 
 ## Зачем
@@ -71,6 +73,10 @@ DataSearcher — это попытка сделать аналитику дан�
 При первом запуске Web Interface открывается **визард первичной настройки** —
 Bento-экран из 4 шагов:
 
+| Шаг 1 «Тип» — Interface или MCP | Шаг «Данные» — файлы и БД |
+|---|---|
+| ![Setup: выбор типа](docs/screenshots/02_setup_type.png) | ![Setup: данные](docs/screenshots/04_setup_data.png) |
+
 1. **Тип** — MCP или Interface: большая карточка-виджет для выбора
 2. **Параметры** — LLM API (URL, model, key + проверка подключения), режим по умолчанию
 3. **Данные** — файлы (dropzone) или подключения к БД (PostgreSQL/MySQL/ClickHouse/SQLite/API + режим auto/remote/dump/federated)
@@ -80,6 +86,8 @@ Bento-экран из 4 шагов:
 подключений: `connections.yaml`, JSON для Claude Desktop и Cursor, HTTP-команду —
 с кнопками копирования и скачивания. Прогресс настройки отображается в карточке
 профиля (Step N of 4).
+
+![MCP-конфиги, сгенерированные визардом](docs/screenshots/06_mcp_config.png)
 
 ---
 
@@ -160,6 +168,8 @@ Bento-экран из 4 шагов:
 
 ## Интерфейс (Soft Bento Neo-Brutalism)
 
+![Bento Workspace](docs/screenshots/12_workspace_final.png)
+
 UI построен по концепции тактильного Bento-интерфейса: зоны разделены плотными
 цветовыми блоками (шалфейно-серый, светло-серый, белый, угольно-чёрный,
 кислотно-лаймовый) с большими скруглениями — без теней и тонких рамок.
@@ -183,6 +193,23 @@ UI построен по концепции тактильного Bento-инт�
 - **База знаний, метрики, Логи** — вкладки в левой колонке
 - **BI Link Builder** — генерация URL в Superset/Grafana/Datalens/Tableau/Power BI
 - **Мобильная адаптация** — single-column layout, welcome-баннер, bottom sheets
+
+<details>
+<summary><b>Больше скриншотов</b></summary>
+
+| Вход | Параметры LLM |
+|---|---|
+| ![Вход](docs/screenshots/01_login.png) | ![Параметры LLM](docs/screenshots/03_setup_params.png) |
+
+| Анализ продаж (таблица из БД) | Публичный дашборд по ссылке |
+|---|---|
+| ![Анализ продаж](docs/screenshots/08_workspace_sales.png) | ![Публичный дашборд](docs/screenshots/10_public_dashboard.png) |
+
+| Карточка дашборда в чате | Админ-панель |
+|---|---|
+| ![Карточка дашборда](docs/screenshots/09_dash_card.png) | ![Админ-панель](docs/screenshots/11_admin.png) |
+
+</details>
 
 ---
 
@@ -359,6 +386,20 @@ connections:
 > **Не хотите писать connections.yaml руками?** Запустите Web Interface,
 > пройдите Setup-визард с выбором типа «MCP» — конфиг сгенерируется автоматически
 > из подключений, созданных через UI.
+
+### Демо без Docker (SQLite)
+
+Полноценная демо-среда без единого контейнера — два SQLite-файла с реляционными данными:
+
+```bash
+python demo-data/make_demo_dbs.py
+# → backend/demo_data/sales.db     (50 клиентов, 20 товаров, 300 заказов, FK-связи)
+# → backend/demo_data/marketing.db (30 строк маркетинговой аналитики)
+```
+
+Затем в UI: **Setup-визард → шаг «Данные»** или вкладка **«БД»** → тип `sqlite`,
+путь к файлу → «Подключить». В чате сработает и связь таблиц: «найди топ-5
+клиентов по сумме заказов» — ИИ сам сделает JOIN по `customer_id`.
 
 ### Docker (демо-среда с тестовыми БД)
 
