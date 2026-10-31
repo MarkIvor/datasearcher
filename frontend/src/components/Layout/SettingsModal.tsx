@@ -32,6 +32,7 @@ export function SettingsModal({ open, onClose }: Props) {
           setModel(s.llm_model);
         })
         .catch(() => {});
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnectionStatus("idle");
       setConnectionError("");
     }

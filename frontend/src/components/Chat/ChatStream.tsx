@@ -1,8 +1,7 @@
 import { useRef, useEffect, useState, type DragEvent } from "react";
 import type { ChatMessage } from "../../types";
 import { MessageBubble } from "./MessageBubble";
-import { AnalysisTemplates } from "./AnalysisTemplates";
-import { Upload, Database } from "lucide-react";
+import { ArrowUpRight, Database, Loader2, Plus, Sparkles } from "lucide-react";
 import * as api from "../../api/client";
 
 interface Props {
@@ -14,7 +13,14 @@ interface Props {
   onFilesChanged?: () => void;
 }
 
-export function MessageList({ messages, onAction, onFileUpload, uploading, hasFiles, onFilesChanged }: Props) {
+const QUICK_ACTIONS = [
+  { title: "Обзор данных", sub: "структура, типы, пропуски", query: "Сделай краткий обзор структуры данных: типы колонок, пропуски, уникальные значения" },
+  { title: "Дашборд", sub: "ключевые метрики и графики", query: "Построй дашборд с ключевыми метриками и визуализациями" },
+  { title: "Аудит качества", sub: "дубликаты, аномалии", query: "Проведи аудит качества данных: найди дубликаты, пропуски, аномалии и выбросы" },
+  { title: "Инсайты", sub: "топ-5 находок автоматически", query: "Найди топ-5 инсайтов в данных автоматически" },
+];
+
+export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFiles, onFilesChanged }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -38,56 +44,66 @@ export function MessageList({ messages, onAction, onFileUpload, uploading, hasFi
 
   return (
     <div
-      className="message-list"
+      className="stream"
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={hasFiles ? undefined : handleDrop}
     >
       {messages.length === 0 && (
         <div className="empty-chat">
-          <div className="empty-chat-icon">
-            <svg width="32" height="32" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="2" width="7" height="7" rx="1.5" fill="white" />
-              <rect x="11" y="2" width="7" height="7" rx="1.5" fill="white" opacity="0.6" />
-              <rect x="2" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.6" />
-              <rect x="11" y="11" width="7" height="7" rx="1.5" fill="white" opacity="0.3" />
-            </svg>
+          <div className="empty-hero notch-cut">
+            <div className="empty-hero-badge">
+              <Sparkles size={17} />
+            </div>
+            <h1 className="empty-hero-title">Анализ данных<br />через диалог</h1>
+            <p className="empty-hero-sub">
+              Загрузите таблицу или подключитесь к БД — задайте вопрос на русском,
+              ИИ сам напишет SQL, построит графики и найдёт инсайты.
+            </p>
           </div>
-          <h2>DataSearcher</h2>
-          <p>Загрузите файл и задайте вопрос — ИИ проанализирует данные, построит графики и найдёт инсайты</p>
 
           {!hasFiles && (
             <div className="empty-zones">
               <div
-                className={`empty-drop-zone ${dragOver ? "drag-over" : ""}`}
+                className={`upload-pill ${dragOver ? "drag-over" : ""}`}
                 onClick={() => inputRef.current?.click()}
               >
-                {uploading ? (
-                  <span className="empty-drop-uploading">Загрузка...</span>
-                ) : (
-                  <>
-                    <Upload size={24} strokeWidth={1.5} />
-                    <span>Перетащите файл или нажмите</span>
-                    <span className="empty-drop-hint">.xlsx, .csv — до 100 МБ</span>
-                  </>
-                )}
+                <span className="upload-pill-icon">
+                  {uploading ? <Loader2 size={16} className="spin" /> : <Plus size={16} strokeWidth={2.5} />}
+                </span>
+                <span className="upload-pill-text">
+                  <span className="upload-pill-title">
+                    {uploading ? "Загрузка файла..." : "Перетащите файл или нажмите"}
+                  </span>
+                  <span className="upload-pill-hint">.xlsx, .csv, .parquet — до 100 МБ</span>
+                </span>
                 <input
                   ref={inputRef}
                   type="file"
-                  accept=".xlsx,.xls,.csv"
+                  accept=".xlsx,.xls,.csv,.parquet"
                   onChange={handleFileSelect}
                   hidden
                 />
               </div>
-              <DBConnectZone onConnected={onFilesChanged} />
-            </div>
-          )}
 
-          {hasFiles && (
-            <AnalysisTemplates onSelect={(q) => onAction?.(q)} />
+              <DBConnectZone onConnected={onFilesChanged} />
+
+              <div className="qa-grid">
+                {QUICK_ACTIONS.map((qa) => (
+                  <button key={qa.title} className="qa-card" onClick={() => onAction?.(qa.query)}>
+                    <span className="qa-badge"><ArrowUpRight size={14} /></span>
+                    <span>
+                      <span className="qa-text">{qa.title}</span>
+                      <span className="qa-sub">{qa.sub}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
+
       {messages.map((msg) => (
         <MessageBubble key={msg.id} message={msg} onAction={onAction} />
       ))}
@@ -134,10 +150,12 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
 
   if (!open) {
     return (
-      <div className="empty-drop-zone db-zone" onClick={() => setOpen(true)}>
-        <Database size={24} strokeWidth={1.5} />
-        <span>Подключить базу данных</span>
-        <span className="empty-drop-hint">PostgreSQL, MySQL, ClickHouse, SQLite</span>
+      <div className="upload-pill" onClick={() => setOpen(true)}>
+        <span className="upload-pill-icon"><Database size={16} /></span>
+        <span className="upload-pill-text">
+          <span className="upload-pill-title">Подключить базу данных</span>
+          <span className="upload-pill-hint">PostgreSQL, MySQL, ClickHouse, SQLite</span>
+        </span>
       </div>
     );
   }
@@ -150,7 +168,7 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
           <label>Название</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Моя БД" />
         </div>
-        <div className="db-form-field" style={{ width: 130 }}>
+        <div className="db-form-field" style={{ maxWidth: 140 }}>
           <label>Тип</label>
           <select value={dbType} onChange={(e) => {
             setDbType(e.target.value);
@@ -170,7 +188,7 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
               <label>Хост</label>
               <input type="text" value={host} onChange={(e) => setHost(e.target.value)} placeholder="localhost" />
             </div>
-            <div className="db-form-field" style={{ width: 80 }}>
+            <div className="db-form-field" style={{ maxWidth: 90 }}>
               <label>Порт</label>
               <input type="number" value={port} onChange={(e) => setPort(Number(e.target.value))} />
             </div>

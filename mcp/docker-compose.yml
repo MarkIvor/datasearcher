@@ -1,0 +1,30 @@
+services:
+  datasearcher-mcp:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Монтируйте свой connections.yaml:
+      - ./connections.yaml:/app/connections.yaml:ro
+      # Данные (если используете локальные CSV/Excel/Parquet):
+      - ./data:/app/data:ro
+      # Персистентность артефактов (графики, экспорты, дашборды):
+      - mcp_exports:/app/exports
+      - mcp_charts:/app/charts
+      - mcp_dashboards:/app/dashboards
+    environment:
+      # LLM для classify_rows / generate_sql / semantic_search:
+      - LLM_BASE_URL=${LLM_BASE_URL:-}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-}
+      - LLM_MODE=${LLM_MODE:-builtin}
+      # Auth для HTTP-транспорта (пусто = без auth):
+      - DATASEARCHER_MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:-}
+      # Таймаут remote SQL (сек):
+      - DATASEARCHER_MCP_QUERY_TIMEOUT=60
+    restart: unless-stopped
+
+volumes:
+  mcp_exports:
+  mcp_charts:
+  mcp_dashboards:

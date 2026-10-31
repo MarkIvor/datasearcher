@@ -1,0 +1,104 @@
+# ── DataSearcher MCP: конфигурация подключений ───────────
+# Скопируйте в connections.yaml и отредактируйте.
+# Чувствительные поля можно задавать через ${ENV_VAR}.
+
+# Режимы работы (field "mode" для каждого подключения):
+#   remote — SQL выполняется в source DB (push-down), DuckDB НЕ используется.
+#   dump   — все таблицы выгружаются в DuckDB при старте.
+#   auto   — remote для SQL, lazy-dump для ML (по умолчанию).
+#   federated — source DB аттачится к DuckDB (кросс-БД JOIN).
+
+connections:
+  # PostgreSQL — remote по умолчанию
+  - name: main_pg
+    db_type: postgresql
+    host: localhost
+    port: 5432
+    database: mydb
+    username: ${PG_USER}
+    password: ${PG_PASSWORD}
+    schemas: [public]           # необязательно: фильтр схем
+    mode: auto                  # remote | dump | auto | federated
+    max_tables: 30
+    max_rows: 50000
+    # ── Семантический слой (ТЗ 2.2) ──────────
+    allowed_schemas: [mart, analytics]   # только эти схемы (пусто = все)
+    blocked_tables: [raw_*, stg_*, tmp_*] # glob-паттерны исключений
+
+  # MySQL / MariaDB
+  - name: analytics_mysql
+    db_type: mysql
+    host: localhost
+    port: 3306
+    database: analytics
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    mode: auto
+
+  # ClickHouse
+  - name: events_ch
+    db_type: clickhouse
+    host: localhost
+    port: 8123
+    database: events
+    username: default
+    password: ${CH_PASSWORD}
+    mode: auto
+
+  # SQLite
+  - name: local_sqlite
+    db_type: sqlite
+    database: ./data/my.sqlite
+    mode: auto
+
+  # ── REST API как источник данных (ТЗ + v3.1) ──
+  - name: crm_api
+    db_type: api
+    base_url: https://api.company.com/v1
+    auth_header: "Authorization: Bearer ${CRM_TOKEN}"
+    endpoints:
+      - path: /customers
+        table_name: customers
+        params: "limit=1000"
+      - path: /orders
+        table_name: orders
+        params: "status=active&limit=5000"
+    pagination: offset           # offset | cursor | none
+    page_size: 1000
+    max_pages: 100
+    mode: dump                   # API грузится в DuckDB
+
+# ── Локальные файлы (CSV/Excel/Parquet) ────────
+# files:
+#   - path: ./data/sales.csv
+#     table_name: sales
+#   - path: ./data/clients.xlsx
+#     table_name: clients         # все листы → отдельные таблицы
+#   - path: ./data/events.parquet
+#     table_name: events
+
+# ── dbt (ТЗ 1.2, v1.5) ────────────────────────
+# dbt:
+#   manifest_path: ./target/manifest.json
+#   semantic_models: ./models/semantic_models.yml
+
+# ── DataHub (ТЗ 1.2, v2) ──────────────────────
+# datahub:
+#   server_url: http://datahub.company.com:8080
+#   token: ${DATAHUB_TOKEN}
+
+# ── Внешние BI-инструменты (ТЗ 3.4, v3) ───────
+# bi_tools:
+#   superset:
+#     base_url: https://superset.company.com
+#   grafana:
+#     base_url: https://grafana.company.com
+#   datalens:
+#     base_url: https://datalens.yandex.cloud
+
+# ── DuckDB настройки ──────────────────────────
+# DuckDB по умолчанию ВЫКЛЮЧЕН. Включается лениво.
+# duckdb:
+#   enabled: true
+#   memory_limit: 2GB
+#   threads: 4

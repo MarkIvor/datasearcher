@@ -66,7 +66,7 @@ describe("LogsTab", () => {
   });
 
   it("switches to error logs tab", async () => {
-    const { container } = render(<LogsTab />);
+    render(<LogsTab />);
     await waitFor(() => expect(api.getQueryLogs).toHaveBeenCalled());
 
     // Клик на Ошибки

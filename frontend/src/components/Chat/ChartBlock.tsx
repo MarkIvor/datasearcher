@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import { Download } from "lucide-react";
 
-const CHART_COLORS = ["#5b6af0", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#06b6d4", "#ec4899", "#6366f1"];
+const CHART_COLORS = ["#C5E827", "#2C2C2C", "#919791", "#5F6B5F", "#A8B860", "#3A4A3A", "#D9E2B8", "#6E7A6E"];
 
 interface Props {
   spec: ChartSpec;
@@ -25,15 +25,15 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: "white", border: "1px solid #e5e6ea", borderRadius: 10,
-      padding: "10px 14px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", fontSize: 12,
+      background: "#121212", borderRadius: 12,
+      padding: "10px 14px", fontSize: 12, color: "#FFFFFF",
     }}>
-      {label !== undefined && <div style={{ fontWeight: 600, marginBottom: 4, color: "#111318" }}>{String(label)}</div>}
+      {label !== undefined && <div style={{ fontWeight: 600, marginBottom: 4, color: "#C5E827" }}>{String(label)}</div>}
       {payload.map((p, i) => (
         <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
           <span style={{ width: 8, height: 8, borderRadius: 2, background: p.color, display: "inline-block" }} />
-          <span style={{ color: "#55585e" }}>{p.name}:</span>
-          <span style={{ fontWeight: 600, color: "#111318" }}>{typeof p.value === "number" ? formatNumber(p.value) : String(p.value)}</span>
+          <span style={{ color: "#8E928E" }}>{p.name}:</span>
+          <span style={{ fontWeight: 600, color: "#FFFFFF" }}>{typeof p.value === "number" ? formatNumber(p.value) : String(p.value)}</span>
         </div>
       ))}
     </div>
@@ -58,8 +58,8 @@ export function ChartBlock({ spec, compact }: Props) {
     }
   }, [title]);
 
-  const tickStyle = { fontSize: 11, fill: "#93969c" };
-  const gridStyle = { strokeDasharray: "3 3", stroke: "#eff0f2" };
+  const tickStyle = { fontSize: 11, fill: "#7A7F7A", fontWeight: 500 };
+  const gridStyle = { strokeDasharray: "3 3", stroke: "#E6E8E4" };
 
   const renderChart = () => {
     switch (type) {

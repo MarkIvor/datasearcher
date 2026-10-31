@@ -23,7 +23,10 @@ export function LogsTab() {
     setLoading(false);
   }, [logType]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
 
   return (
     <div className="sidebar-section">
@@ -55,7 +58,7 @@ export function LogsTab() {
                 <div style={{ fontSize: 9, opacity: 0.55, marginTop: 2 }}>
                   {l.timestamp.slice(11, 19)} · {l.table_name || "—"}{l.connection ? ` · ${l.connection}` : ""}
                 </div>
-                {l.error && <div style={{ fontSize: 9, color: "var(--danger, #e74c3c)", marginTop: 2 }}>{l.error.slice(0, 80)}</div>}
+                {l.error && <div style={{ fontSize: 9, color: "var(--error)", fontWeight: 600, marginTop: 2 }}>{l.error.slice(0, 80)}</div>}
               </div>
             ))}
           </div>
@@ -66,7 +69,7 @@ export function LogsTab() {
             {errorLogs.map((l) => (
               <div key={l.id} className="table-item" style={{ flexDirection: "column", alignItems: "stretch", padding: "6px 8px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <code style={{ fontSize: 10, color: "var(--danger, #e74c3c)" }}>{l.error_type || "error"}</code>
+                  <code style={{ fontSize: 10, color: "var(--error)", fontWeight: 600 }}>{l.error_type || "error"}</code>
                   <span style={{ fontSize: 9, opacity: 0.6 }}>{l.timestamp.slice(11, 19)}</span>
                 </div>
                 <div style={{ fontSize: 10, opacity: 0.75, marginTop: 2 }}>{l.message.slice(0, 100)}</div>

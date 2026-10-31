@@ -5,7 +5,6 @@ export function useKeyboardShortcuts(handlers: {
   onClear?: () => void;
   onNewChat?: () => void;
   onExportPDF?: () => void;
-  onToggleTheme?: () => void;
   onFocusInput?: () => void;
 }) {
   const onKeyDown = useCallback(
@@ -19,10 +18,6 @@ export function useKeyboardShortcuts(handlers: {
       if (mod && e.shiftKey && e.key === "p" && handlers.onExportPDF) {
         e.preventDefault();
         handlers.onExportPDF();
-      }
-      if (mod && e.key === "d" && handlers.onToggleTheme) {
-        e.preventDefault();
-        handlers.onToggleTheme();
       }
       if (mod && e.key === "k" && handlers.onFocusInput) {
         e.preventDefault();

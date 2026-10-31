@@ -38,6 +38,29 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  # ── DataSearcher MCP (profile: mcp) ────────
+  # Запуск: docker compose --profile mcp up -d mcp
+  mcp:
+    build: ./mcp
+    profiles: ["mcp"]
+    ports:
+      - "8100:8000"
+    volumes:
+      # Монтируйте свой connections.yaml:
+      - ./mcp/connections.yaml:/app/connections.yaml:ro
+      # Персистентность артефактов (графики, экспорты, дашборды):
+      - mcp_exports:/app/exports
+      - mcp_charts:/app/charts
+      - mcp_dashboards:/app/dashboards
+    environment:
+      - LLM_BASE_URL=${LLM_BASE_URL:-}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-}
+      - LLM_MODE=${LLM_MODE:-builtin}
+      - DATASEARCHER_MCP_AUTH_TOKEN=${MCP_AUTH_TOKEN:-}
+      - DATASEARCHER_MCP_QUERY_TIMEOUT=60
+    restart: unless-stopped
+
   # ── PostgreSQL: e-commerce demo ────────────
   postgres:
     image: postgres:16-alpine
@@ -109,3 +132,6 @@ volumes:
   postgres_data:
   mysql_data:
   clickhouse_data:
+  mcp_exports:
+  mcp_charts:
+  mcp_dashboards:

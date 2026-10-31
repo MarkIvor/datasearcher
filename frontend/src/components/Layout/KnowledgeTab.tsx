@@ -24,7 +24,10 @@ export function KnowledgeTab() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, [load]);
 
   const handleSearch = async () => {
     if (!searchQ.trim()) { setResults([]); return; }
@@ -151,7 +154,7 @@ export function KnowledgeTab() {
           </div>
 
           {showMetricForm && (
-            <div style={{ border: "1px solid var(--border)", borderRadius: 6, padding: 8, marginBottom: 8 }}>
+            <div style={{ border: "1px dashed var(--border-dashed)", borderRadius: 14, padding: 8, marginBottom: 8 }}>
               <input className="kb-search" style={{ width: "100%", marginBottom: 4 }} placeholder="Имя метрики" value={metricForm.name} onChange={(e) => setMetricForm({ ...metricForm, name: e.target.value })} />
               <input className="kb-search" style={{ width: "100%", marginBottom: 4 }} placeholder="Формула" value={metricForm.formula} onChange={(e) => setMetricForm({ ...metricForm, formula: e.target.value })} />
               <input className="kb-search" style={{ width: "100%", marginBottom: 4 }} placeholder="Описание" value={metricForm.description} onChange={(e) => setMetricForm({ ...metricForm, description: e.target.value })} />

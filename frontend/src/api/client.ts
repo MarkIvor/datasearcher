@@ -675,3 +675,89 @@ export async function getEnterpriseSettings(): Promise<EnterpriseSettings> {
   if (!resp.ok) throw new Error("Failed to get enterprise settings");
   return resp.json();
 }
+
+// ── Setup API (первичная настройка) ──────────
+
+export interface SetupState {
+  completed: boolean;
+  mode: string;
+  step: number;
+  steps_total: number;
+  scope: "global" | "user" | null;
+  is_admin: boolean;
+  llm: {
+    url: string;
+    model: string;
+    api_key_masked: string;
+    has_key: boolean;
+  };
+  enterprise: {
+    read_only: boolean;
+    pii_masking: boolean;
+    rate_limit_enabled: boolean;
+    log_enabled: boolean;
+    default_mode: string;
+    auto_translate: boolean;
+  };
+  connections_count: number;
+}
+
+export interface McpConfig {
+  connections_yaml: string;
+  claude_json: string;
+  cursor_json: string;
+  http_command: string;
+  docker_command: string;
+  env_block: string;
+  connections: string[];
+}
+
+export async function getSetup(): Promise<SetupState> {
+  const resp = await fetch(`${API_BASE}/api/setup/`, { credentials: "include" });
+  if (!resp.ok) throw new Error("Failed to get setup state");
+  return resp.json();
+}
+
+export async function updateSetup(body: {
+  step?: number;
+  mode?: string;
+  scope?: "global" | "user";
+  llm_url?: string;
+  llm_model?: string;
+  llm_api_key?: string;
+  completed?: boolean;
+}): Promise<SetupState> {
+  const resp = await fetch(`${API_BASE}/api/setup/`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  if (!resp.ok) throw new Error("Failed to update setup");
+  return resp.json();
+}
+
+export async function testSetupLLM(body: { url?: string; key?: string }): Promise<{ connected: boolean; models?: string[]; error?: string }> {
+  const resp = await fetch(`${API_BASE}/api/setup/test-llm`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+  if (!resp.ok) throw new Error("Failed to test LLM");
+  return resp.json();
+}
+
+export async function generateMcpConfig(connectionIds?: number[]): Promise<McpConfig> {
+  const resp = await fetch(`${API_BASE}/api/setup/mcp-config`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ connection_ids: connectionIds || [] }),
+    credentials: "include",
+  });
+  if (!resp.ok) {
+    const d = await resp.json().catch(() => ({ detail: "Ошибка генерации конфига" }));
+    throw new Error(d.detail || "Ошибка генерации конфига");
+  }
+  return resp.json();
+}

@@ -9,7 +9,6 @@ const TOOL_ICONS: Record<string, string> = {
   auto_insights: "✨", transform_data: "🔄", merge_tables: "🔗",
   export_data: "📥", detect_patterns: "🔎", build_dashboard: "📱",
   data_story: "📖", create_public_dashboard: "🌐",
-  // enterprise / MCP-паритет
   query_explain: "🔍", attach_database: "🔌", refresh_schema: "🔄",
   test_connection: "✅", load_file: "📂", scan_pii: "🔒",
   get_logs: "📜", add_example: "⭐", search_knowledge: "📚",
@@ -33,7 +32,6 @@ const TOOL_SHORT: Record<string, string> = {
   merge_tables: "Merge", export_data: "Экспорт",
   detect_patterns: "Паттерны", build_dashboard: "Дашборд",
   data_story: "История", create_public_dashboard: "Дашборд",
-  // enterprise / MCP-паритет
   query_explain: "EXPLAIN", attach_database: "Подключение", refresh_schema: "Обновление",
   test_connection: "Тест", load_file: "Загрузка", scan_pii: "PII",
   get_logs: "Логи", add_example: "Пример", search_knowledge: "Поиск KB",
@@ -75,15 +73,13 @@ export function AnalysisProgress({ tools }: Props) {
   const total = unique.length;
   const completed = unique.filter((t) => t.status === "completed").length;
   const running = unique.find((t) => t.status === "running");
-  const progress = total > 0 ? (completed / total) * 100 : 0;
 
   return (
     <div className="analysis-progress">
-      <div className="progress-bar-track">
-        <div
-          className="progress-bar-fill"
-          style={{ width: `${progress}%` }}
-        />
+      <div className="seg-track">
+        {unique.map((t, i) => (
+          <span key={i} className={`seg-segment ${t.status === "completed" ? "done" : ""}`} />
+        ))}
       </div>
       <div className="progress-info">
         <span className="progress-label">
@@ -91,13 +87,13 @@ export function AnalysisProgress({ tools }: Props) {
             ? `${TOOL_ICONS[running.name] || "🔧"} ${TOOL_SHORT[running.name] || running.name}…`
             : `${completed}/${total} шагов`}
         </span>
-        <span className="progress-steps">
+        <div className="progress-steps">
           {unique.map((t, i) => (
-            <span key={i} className={`progress-step ${t.status}`}>
+            <span key={i} className={`progress-step ${t.status === "completed" ? "completed" : ""}`}>
               {TOOL_SHORT[t.name] || t.name}
             </span>
           ))}
-        </span>
+        </div>
       </div>
     </div>
   );

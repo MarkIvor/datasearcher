@@ -15,35 +15,35 @@ export function MessageBubble({ message, onAction }: Props) {
       .map((b) => b.content)
       .join("");
     return (
-      <div className="message user">
-        <div className="message-avatar">Вы</div>
-        <div className="message-body">
-          <div className="message-content"><span>{textContent}</span></div>
+      <div className="msg-user-row">
+        <div className="msg-user">
+          <span>{textContent}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="message assistant">
-      <div className="message-avatar">DS</div>
-      <div className="message-body">
-        <MessageBlocks
-          message={message.blocks}
-          isUser={false}
-          isStreaming={message.isStreaming}
-          isStopped={message.isStopped}
-        />
-        {message.quickActions && message.quickActions.length > 0 && !message.isStreaming && onAction && (
-          <div className="quick-actions">
-            {message.quickActions.map((action, i) => (
-              <button key={i} className="quick-action-btn" onClick={() => onAction(action)}>
-                {action}
-              </button>
-            ))}
-          </div>
-        )}
+    <div className="msg-ai">
+      <div className="msg-ai-head">
+        <div className="msg-ai-avatar">DS</div>
+        <span className="msg-ai-label">DataSearcher</span>
       </div>
+      <MessageBlocks
+        message={message.blocks}
+        isUser={false}
+        isStreaming={message.isStreaming}
+        isStopped={message.isStopped}
+      />
+      {message.quickActions && message.quickActions.length > 0 && !message.isStreaming && onAction && (
+        <div className="quick-actions">
+          {message.quickActions.map((action, i) => (
+            <button key={i} className="quick-action-btn" onClick={() => onAction(action)}>
+              {action}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

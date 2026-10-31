@@ -19,9 +19,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div style={{ padding: "10px 14px", background: "var(--error-light)", borderRadius: 8, fontSize: 12, color: "#991b1b" }}>
-          Ошибка рендеринга
-        </div>
+        <div className="error-boundary">Ошибка рендеринга</div>
       );
     }
     return this.props.children;

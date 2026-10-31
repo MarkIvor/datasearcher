@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from .config import settings
 from .models.database import init_db
 from .routers import chat, files, settings as settings_router, auth, admin, connections, dashboards
-from .routers import knowledge, logs, metadata
+from .routers import knowledge, logs, metadata, setup
 from .services.llm_service import LLMService
 from .session import SessionManager
 
@@ -70,6 +70,7 @@ app.include_router(settings_router.router)
 app.include_router(knowledge.router)
 app.include_router(logs.router)
 app.include_router(metadata.router)
+app.include_router(setup.router)
 
 
 @app.get("/api/health")

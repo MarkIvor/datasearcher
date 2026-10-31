@@ -2,12 +2,23 @@
 
 ![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-1.28-purple)
 ![DuckDB](https://img.shields.io/badge/DuckDB-In--process-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Language](https://img.shields.io/badge/Язык-Русский-red)
 
 > Загрузи таблицу или подключись к БД. Задай вопрос. Получи ответ с графиками.
-> 46 аналитических инструментов, ML-прогнозы, дашборды, enterprise-безопасность — всё через чат.
+> 46 аналитических инструментов, ML-прогнозы, дашборды, enterprise-безопасность.
+
+**DataSearcher — один продукт с двумя типами использования:**
+
+| Тип | Что это | Для кого |
+|-----|---------|----------|
+| **Web Interface** | Чат-дашборд: React UI + FastAPI, диалог на русском, графики, дашборды, админ-панель | Аналитики, бизнес-пользователи |
+| **MCP** | MCP-сервер (Claude Desktop, Cursor, VS Code): те же 46 инструментов прямо в твоём ИИ-клиенте | Пользователи Claude/Cursor |
+
+Оба типа делят одно ядро: 46 инструментов, read-only guard, PII-маскирование,
+Knowledge Base, sqlglot-трансляцию SQL и коннекторы (PostgreSQL, MySQL, ClickHouse, SQLite, REST API).
 
 ---
 
@@ -30,23 +41,21 @@ DataSearcher — это попытка сделать аналитику дан�
 ## Как это работает
 
 ```
-┌──────────┐     ┌──────────┐     ┌──────────┐
-│  React   │────▶│ FastAPI  │────▶│  DuckDB  │
-│  Chat UI │◀────│  + LLM   │◀────│ In-mem   │
-└──────────┘ SSE └──────────┘     └──────────┘
-                  │                      ▲
-                  ▸ 46 analysis tools    │
-                  ▸ SSE streaming        │
-                  ▸ JWT auth             │
-                  ▸ Admin panel          │
-                  ▸ DB connections       │
-                  ▸ read-only guard      │
-                  ▸ PII masking          │
-                  ▸ Knowledge Base       │
-                  │                      │
-                  │   ┌──────────────────┘
-                  │   │ Source DB (push-down)
-                  └──▶ PostgreSQL, MySQL, ClickHouse, SQLite, REST API
+┌─────────────────── Web Interface ───────────────────┐
+│   React UI  ──SSE──▶  FastAPI + LLM  ──▶  DuckDB    │
+│                        │                             │
+│                        ├── 46 analysis tools         │
+│                        ├── JWT auth + admin panel    │
+│                        └── DB connections (push-down)│
+└─────────────────────────────────────────────────────┘
+┌─────────────────── MCP ─────────────────────────────┐
+│   Claude / Cursor ──stdio/HTTP──▶  FastMCP server   │
+│                        │                             │
+│                        ├── те же 46 tools            │
+│                        ├── connections.yaml          │
+│                        └── Bearer auth (HTTP)        │
+└─────────────────────────────────────────────────────┘
+            PostgreSQL · MySQL · ClickHouse · SQLite · REST API
 ```
 
 1. Пользователь загружает .xlsx/.csv/.parquet или подключается к существующей БД
@@ -54,6 +63,23 @@ DataSearcher — это попытка сделать аналитику дан�
 3. LLM выбирает нужные инструменты, выполняет SQL (в DuckDB или push-down в source DB), строит графики
 4. Результат стримится в чат с интерактивными таблицами и чартами
 5. PII-колонки автоматически маскируются, все запросы логируются для аудита
+
+---
+
+## Первичная настройка (Setup-визард)
+
+При первом запуске Web Interface открывается **визард первичной настройки** —
+Bento-экран из 4 шагов:
+
+1. **Тип** — MCP или Interface: большая карточка-виджет для выбора
+2. **Параметры** — LLM API (URL, model, key + проверка подключения), режим по умолчанию
+3. **Данные** — файлы (dropzone) или подключения к БД (PostgreSQL/MySQL/ClickHouse/SQLite/API + режим auto/remote/dump/federated)
+4. **Готово** — security-тумблеры (read-only, PII, rate limit, логи), scope («для всех» / «только для меня»), Confirm
+
+После выбора типа **MCP** визард генерирует готовые конфиги из созданных
+подключений: `connections.yaml`, JSON для Claude Desktop и Cursor, HTTP-команду —
+с кнопками копирования и скачивания. Прогресс настройки отображается в карточке
+профиля (Step N of 4).
 
 ---
 
@@ -132,26 +158,31 @@ DataSearcher — это попытка сделать аналитику дан�
 
 ---
 
-## Функции UI
+## Интерфейс (Soft Bento Neo-Brutalism)
 
+UI построен по концепции тактильного Bento-интерфейса: зоны разделены плотными
+цветовыми блоками (шалфейно-серый, светло-серый, белый, угольно-чёрный,
+кислотно-лаймовый) с большими скруглениями — без теней и тонких рамок.
+
+- **3-колоночный Bento Workspace** — навигация слева, интерактивный поток в центре, живое состояние справа
+- **Rich Generative UI** — сообщения ИИ содержат интерактивные виджеты: карточки выбора, чипсы параметров, дропзоны файлов, прогресс-бары
+- **Карточка профиля с прогрессом** — Steps N of 4 и процент настройки
+- **Сводка состояния (Inspector)** — тёмная карточка Draft/Active, key-value таблица, лаймовая итоговая метрика
 - **Интерактивные таблицы** — сортировка, поиск, пагинация, экспорт CSV, подсветка NULL
-- **Тёмная тема** — переключение Ctrl+D, сохранение в localStorage
 - **Экспорт графиков PNG** — кнопка на каждом чарте, 2x pixel ratio
-- **PDF-отчёты** — титульная страница, графики как PNG, чистый текст, Ctrl+Shift+P
-- **Шаблоны анализов** — 6 карточек для быстрого старта (Обзор, Дашборд, Аудит, Тренды, Корреляции, Стори)
+- **PDF-отчёты** — титульная страница, графики как PNG, Ctrl+Shift+P
+- **Шаблоны анализов** — карточки быстрых действий для старта (Обзор, Дашборд, Аудит, Тренды, Корреляции, Стори)
 - **Авто-профиль + дашборд** — при загрузке первого файла автоматически запускается анализ
 - **Уведомления** — звук + Web Notification при завершении стрима
-- **Горячие клавиши** — Ctrl+D тема, Ctrl+K фокус, Ctrl+Shift+P PDF
-- **История запросов** — вкладка в sidebar, клик = повтор
+- **Горячие клавиши** — Ctrl+K фокус, Ctrl+Shift+P PDF
+- **История запросов** — список сессий слева, клик = повтор
 - **Умные подсказки** — на основе типов колонок (date→тренд, num→корреляция, cat→кросс-таб)
 - **Сравнение анализов** — split-view оверлей
 - **ER-схема** — визуальная схема таблиц и колонок
-- **Подключения к БД** — PostgreSQL, MySQL, ClickHouse, SQLite с выбором режима (auto/remote/dump/federated)
-- **Зона подключения к БД** — на главном экране рядом с загрузкой файла
-- **База знаний (sidebar)** — метаданные таблиц/колонок, метрики, поиск, загрузка dbt manifest, синхронизация DataHub
-- **Логи (sidebar)** — запросы, ошибки, аудит-логи
-- **BI Link Builder** — модалка для генерации URL в Superset/Grafana/Datalens/Tableau/Power BI
-- **Админ-панель: Безопасность** — enterprise-настройки (read-only, PII, rate limit, режимы)
+- **Подключения к БД** — PostgreSQL, MySQL, ClickHouse, SQLite, REST API с режимами (auto/remote/dump/federated)
+- **База знаний, метрики, Логи** — вкладки в левой колонке
+- **BI Link Builder** — генерация URL в Superset/Grafana/Datalens/Tableau/Power BI
+- **Мобильная адаптация** — single-column layout, welcome-баннер, bottom sheets
 
 ---
 
@@ -173,7 +204,7 @@ DataSearcher — это попытка сделать аналитику дан�
 Per-tool throttling: SQL — 60/мин, ML — 10/мин (настраивается). `RATE_LIMIT_ENABLED=false` отключает.
 
 ### Schema ACL
-Фильтрация таблиц по бизнес-слою: `BLOCKED_TABLE_PATTERNS=raw_*,stg_*,tmp_*` — glob-паттерны исключений.
+Фильтрация таблиц по бизнес-слою: `BLOCKED_TABLE_PATTERNS=raw_*,stg_*,tmp_*` — glob-паттерны исключений. В MCP: `allowed_schemas` / `blocked_tables` в connections.yaml.
 
 ### Режимы подключений
 
@@ -190,13 +221,21 @@ Per-tool throttling: SQL — 60/мин, ML — 10/мин (настраивает
 ### Semantic search + Example Store
 `semantic_search` — поиск по текстовым данным через LLM embeddings. Example Store — база пар «NL-запрос → SQL» для few-shot обучения `generate_sql`.
 
+### LLM режимы (только MCP)
+
+| `llm_mode` | Как работает | Когда использовать |
+|-----------|-------------|-------------------|
+| `builtin` | LLM-запросы (`LLM_BASE_URL`/`LLM_MODEL`) | Ollama, vLLM, OpenAI |
+| `sampling` | LLM через MCP sampling | Claude Desktop |
+| `none` | Классификация без LLM | Без LLM |
+
 ---
 
-## Авторизация и роли
+## Авторизация и роли (Web Interface)
 
 | Роль | Возможности |
 |------|------------|
-| **admin** | Управление пользователями, настройками, подключениями к БД, LLM-параметрами (глобальными и индивидуальными) |
+| **admin** | Управление пользователями, настройками, подключениями к БД, LLM-параметрами (глобальными и индивидуальными), первичная настройка для всех |
 | **analyst** | Загрузка файлов, анализ, свои LLM-настройки (если разрешено), свои подключения к БД |
 | **viewer** | Просмотр данных и результатов анализа |
 
@@ -225,9 +264,9 @@ Per-tool throttling: SQL — 60/мин, ML — 10/мин (настраивает
 
 - Python 3.12+
 - Node.js 20+
-- LLM API (Ollama, vLLM, OpenAI-compatible)
+- LLM API (Ollama, vLLM, OpenAI-compatible) — для чата
 
-### Установка
+### Web Interface
 
 ```bash
 # Backend
@@ -249,7 +288,77 @@ npm run dev
 - **Email:** `admin@datasearcher.com`
 - **Пароль:** `admin`
 
-Смените пароль после первого входа через админ-панель.
+Смените пароль после первого входа через админ-панель. После первого входа
+откроется Setup-визард.
+
+### Режим MCP
+
+```bash
+# Установка (из корня репозитория)
+cd mcp
+pip install -e ".[all]"
+
+# Конфигурация подключений
+cp connections.example.yaml connections.yaml
+# Отредактируйте connections.yaml
+
+# Запуск stdio (Claude Desktop, Cursor, VS Code)
+datasearcher-mcp --config /path/to/connections.yaml
+
+# HTTP-транспорт (удалённый доступ + Bearer auth)
+datasearcher-mcp --transport http --host 0.0.0.0 --port 8000 --auth-token secret123
+```
+
+Подключение к Claude Desktop:
+
+```json
+{
+  "mcpServers": {
+    "datasearcher": {
+      "command": "datasearcher-mcp",
+      "args": ["--config", "/path/to/connections.yaml"]
+    }
+  }
+}
+```
+
+Cursor (`.cursor/mcp.json`):
+
+```json
+{"mcpServers": {"datasearcher": {"command": "datasearcher-mcp", "args": ["--config", "/path/to/connections.yaml"]}}}
+```
+
+<details>
+<summary><b>Пример connections.yaml</b></summary>
+
+```yaml
+connections:
+  - name: my_db
+    db_type: postgresql          # postgresql | mysql | clickhouse | sqlite | api
+    host: localhost
+    port: 5432
+    database: mydb
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    mode: auto                   # auto | remote | dump | federated
+    allowed_schemas: [mart, analytics]
+    blocked_tables: [raw_*, stg_*, tmp_*]
+
+  # REST API тоже работает:
+  - name: crm_api
+    db_type: api
+    base_url: https://api.company.com/v1
+    auth_header: "Authorization: Bearer ${CRM_TOKEN}"
+    endpoints:
+      - path: /customers
+        table_name: customers
+    mode: dump
+```
+</details>
+
+> **Не хотите писать connections.yaml руками?** Запустите Web Interface,
+> пройдите Setup-визард с выбором типа «MCP» — конфиг сгенерируется автоматически
+> из подключений, созданных через UI.
 
 ### Docker (демо-среда с тестовыми БД)
 
@@ -268,11 +377,15 @@ docker compose down
 
 # Полный сброс (удалить volumes с данными)
 docker compose down -v
+
+# MCP-сервер (опционально)
+docker compose --profile mcp up -d mcp    # → http://localhost:8100/mcp
 ```
 
 После запуска:
 - **Frontend (UI):** http://localhost:3000
 - **Backend API:** http://localhost:8000/api/health
+- **MCP (профиль mcp):** http://localhost:8100/mcp
 
 #### Демо-базы данных (преднастроены)
 
@@ -287,7 +400,7 @@ docker-compose поднимает 3 БД с авто-инициализацие�
 #### Как подключить демо-БД через UI
 
 1. Зайди на http://localhost:3000, войди как `admin@datasearcher.com` / `admin`
-2. Открой вкладку **БД** в сайдбаре (или зону подключения на главном экране)
+2. Пройди Setup-визард (или открой вкладку **БД** в левой колонке)
 3. Создай подключение:
    - **PostgreSQL:** host=`localhost`, port=`5432`, db=`ecommerce`, user=`datasearcher`, pass=`ds_demo_pass_2024`
    - **MySQL:** host=`localhost`, port=`3306`, db=`crm`, user=`datasearcher`, pass=`ds_demo_pass_2024`
@@ -297,11 +410,11 @@ docker-compose поднимает 3 БД с авто-инициализацие�
 
 #### Демо-CSV файл
 
-`demo-data/marketing_metrics.csv` — 30 строк маркетинговой аналитики (каналы, визиты, клики, конверсии, ROI). Загрузи через UI (drag & drop на главном экране).
+`demo-data/marketing_metrics.csv` — 30 строк маркетинговой аналитики (каналы, визиты, клики, конверсии, ROI). Загрузи через UI (drag & drop в Setup-визарде или в потоке).
 
 #### LLM для чата
 
-Для работы чата нужен LLM API (OpenAI-compatible). `.env` преднастроен на agentplatform.ru:
+Для работы чата нужен LLM API (OpenAI-compatible):
 ```
 LLM_BASE_URL=https://api.agentplatform.ru/v1
 LLM_API_KEY=sk-...
@@ -319,7 +432,7 @@ ollama serve
 
 ## Переменные окружения
 
-### Базовые
+### Базовые (Web Interface)
 
 | Переменная | По умолчанию | Описание |
 |-----------|-------------|----------|
@@ -329,11 +442,11 @@ ollama serve
 | `JWT_SECRET` | *auto-generated* | Секрет для JWT (ОБЯЗАТЕЛЬНО задать в prod!) |
 | `ENCRYPTION_KEY` | `` | Fernet-ключ для шифрования connection strings |
 | `ADMIN_EMAIL` | `admin@datasearcher.com` | Email администратора по умолчанию |
-| `ADMIN_PASSWORD` | `admin` | Пароль администратора |
+| `ADMIN_PASSWORD` | `admin` | Пароль администратора по умолчанию |
 | `UPLOAD_DIR` | `./uploads` | Директория для загрузок |
 | `DUCKDB_MEMORY_LIMIT` | `2GB` | Лимит памяти DuckDB |
 
-### Enterprise
+### Enterprise (Web Interface)
 
 | Переменная | По умолчанию | Описание |
 |-----------|-------------|----------|
@@ -358,6 +471,24 @@ ollama serve
 | `SEMANTIC_SEARCH_MAX_ROWS` | `10000` | Лимит строк для semantic_search |
 | `EMBEDDINGS_DIR` | `` | Директория кеша embeddings |
 
+### MCP (префикс `DATASEARCHER_MCP_`)
+
+| Переменная | По умолчанию | Описание |
+|-----------|-------------|----------|
+| `DATASEARCHER_MCP_CONNECTIONS_FILE` | `connections.yaml` | Файл подключений |
+| `DATASEARCHER_MCP_READ_ONLY` | `true` | Read-only guard (блок DML/DDL) |
+| `DATASEARCHER_MCP_PII_MASKING` | `true` | Авто-маскирование PII |
+| `DATASEARCHER_MCP_LOG_ENABLED` | `true` | Логирование запросов/ошибок |
+| `DATASEARCHER_MCP_RATE_LIMIT_ENABLED` | `true` | Rate limiting |
+| `DATASEARCHER_MCP_RATE_LIMIT_SQL` | `60` | SQL-запросов в минуту |
+| `DATASEARCHER_MCP_RATE_LIMIT_ML` | `10` | ML-запросов в минуту |
+| `DATASEARCHER_MCP_QUERY_TIMEOUT` | `60` | Таймаут remote SQL (сек) |
+| `DATASEARCHER_MCP_AUTO_TRANSLATE` | `true` | Трансляция SQL между диалектами |
+| `DATASEARCHER_MCP_AUTH_TOKEN` | `` | Bearer token для HTTP auth |
+| `DATASEARCHER_MCP_DUCKDB_ENABLED` | `false` | DuckDB лениво |
+| `DATASEARCHER_MCP_DEFAULT_MODE` | `auto` | Режим по умолчанию |
+| `DATASEARCHER_MCP_EXAMPLE_STORE_ENABLED` | `true` | Example Store (few-shot) |
+
 > **Безопасность**: В продакшене ОБЯЗАТЕЛЬНО задайте `JWT_SECRET` и `ENCRYPTION_KEY`.
 > Сгенерируйте: `python -c "import secrets; print(secrets.token_hex(32))"` для JWT_SECRET
 > и `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` для ENCRYPTION_KEY.
@@ -367,55 +498,45 @@ ollama serve
 ## Архитектура
 
 ```
-backend/
-  app/
-    main.py              # FastAPI, lifespan, routers
-    config.py            # pydantic-settings (базовые + enterprise)
-    session.py           # SessionManager, DuckDB connections
-    models/
-      __init__.py        # Pydantic models
-      database.py        # SQLAlchemy models (User, AppSettings, UserSettings, DBConnection)
-    routers/
-      auth.py            # JWT auth (login/register/refresh/logout)
-      admin.py           # Admin panel API (users, LLM, enterprise-settings)
-      chat.py            # SSE chat + PDF export
-      files.py           # File upload/list/delete/preview
-      connections.py     # DB connections CRUD + attach (режимы auto/remote/dump/federated)
-      settings.py        # LLM settings
-      knowledge.py       # Knowledge Base API (таблицы, колонки, метрики, поиск, примеры)
-      logs.py            # Логи запросов/ошибок/аудита
-      metadata.py        # dbt manifest, DataHub sync, PII scan, BI link builder
-      dashboards.py      # Публичные дашборды
-    services/
-      auth_service.py    # JWT, bcrypt, encryption, per-user LLM
-      llm_service.py     # LLM streaming, tool loop, rate limit, logging, remote-table resolve
-      pdf_export.py      # PDF generation with charts
-      file_service.py    # File handling
-      engine.py          # AnalysisEngine (connectors, режимы, KB, PII, sqlglot)
-      sql_guard.py       # read-only enforcement
-      pii_detector.py    # авто-детекция + маскирование PII
-      logging_db.py      # SQLite append-only логи
-      error_handler.py   # человекочитаемые SQL-ошибки
-      rate_limiter.py     # per-tool throttling
-      knowledge_base.py   # SQLite KB (описания, владельцы, метрики)
-      dbt_loader.py       # парсинг dbt manifest.json
-      datahub_client.py  # DataHub GraphQL клиент
-      embeddings.py       # semantic search через embeddings
-      example_store.py   # NL→SQL пары + few-shot
-      bi_linker.py       # URL builder для BI-инструментов
-      connectors/        # PostgreSQL, MySQL, ClickHouse, SQLite, REST API
-      services/tools/    # 46 аналитических инструментов
-
-frontend/
-  src/
-    api/client.ts        # API client (auth, admin, connections, chat, KB, logs, metadata, BI)
-    hooks/               # useAuth, useChat, useFiles, useTheme, useNotification, ...
-    components/
-      Chat/              # MessageBlocks, ChartBlock, InteractiveTable, AnalysisTemplates, ComparisonView
-      Layout/            # Sidebar, SchemaDiagram, SettingsModal, FilePreviewModal, KnowledgeTab, LogsTab, BILinkModal
-      Admin/             # AdminPanel (Users / Settings / Connections / Безопасность)
-      Files/             # FileUpload
-      Pages/             # LoginPage, RegisterPage, DashboardPage
+├── backend/                  # Web Interface: FastAPI
+│   └── app/
+│       ├── main.py           # FastAPI, lifespan, routers
+│       ├── config.py         # pydantic-settings (базовые + enterprise)
+│       ├── session.py        # SessionManager, DuckDB connections
+│       ├── models/           # Pydantic + SQLAlchemy (User, AppSettings, DBConnection)
+│       ├── routers/          # auth, admin, chat, files, connections, settings,
+│       │                     # knowledge, logs, metadata, dashboards, setup
+│       └── services/         # llm_service, engine, sql_guard, pii_detector,
+│                             # knowledge_base, connectors/, tools/ (46 tools)
+│
+├── frontend/                 # Web Interface: React 19 (Bento UI)
+│   └── src/
+│       ├── api/client.ts     # API client (auth, admin, setup, connections, chat, KB, logs)
+│       ├── hooks/            # useAuth, useChat, useFiles, useNotification, ...
+│       └── components/
+│           ├── Bento/        # AppShell, ProfileCard, SessionList, ChatStream,
+│           │                 # SummaryCard, InfoPills, ActionCard, ChatInputBar
+│           ├── Setup/        # SetupWizard: Тип → Параметры → Данные → Готово
+│           ├── Chat/         # виджеты ИИ, таблицы, чарты, шаблоны
+│           ├── Layout/       # KnowledgeTab, LogsTab, SchemaDiagram, модалки
+│           ├── Admin/        # AdminPanel (Users / Settings / Connections)
+│           └── Pages/        # LoginPage, RegisterPage, DashboardPage
+│
+├── mcp/                      # MCP-сервер (единое ядро инструментов)
+│   ├── pyproject.toml        # пакет datasearcher-mcp, entrypoint datasearcher-mcp
+│   ├── connections.example.yaml
+│   ├── Dockerfile
+│   └── src/datasearcher_mcp/
+│       ├── server.py         # FastMCP: 46 tools + 5 resources + 2 prompts
+│       ├── __main__.py       # CLI: --transport, --config, --auth-token
+│       ├── config.py         # 30+ параметров (pydantic-settings)
+│       ├── engine.py         # remote/dump/auto/federated, ACL, KB, PII
+│       ├── connectors/       # PostgreSQL, MySQL, ClickHouse, SQLite, REST API
+│       ├── tools/            # инструменты анализа
+│       └── render/            # matplotlib PNG + миниатюры графиков
+│
+├── demo-data/                # демо-CSV + SQL-инициализация демо-БД
+└── docker-compose.yml        # web-стек + profile mcp
 ```
 
 ---
@@ -424,8 +545,9 @@ frontend/
 
 | Слой | Технология |
 |------|-----------|
-| Frontend | React 19, TypeScript, Vite, Recharts, @tanstack/react-table |
+| Frontend | React 19, TypeScript, Vite, Recharts, @tanstack/react-table, Plus Jakarta Sans |
 | Backend | FastAPI, DuckDB, SQLAlchemy, JWT (PyJWT), bcrypt (passlib) |
+| MCP | mcp[cli] 1.28 (FastMCP, stdio/SSE/HTTP) |
 | ML/Анализ | scikit-learn, scipy, numpy |
 | DB Drivers | psycopg2 (PostgreSQL), pymysql (MySQL), clickhouse-connect, aiosqlite |
 | SQL трансляция | sqlglot (DuckDB → source DB диалект) |
@@ -439,52 +561,43 @@ frontend/
 
 ## Тесты
 
-Проект покрыт 374 тестами (332 backend + 42 frontend). Все проходят за ~35 секунд.
-
-### Backend (pytest, 332 теста)
+### Backend (pytest, 332+ теста)
 
 ```bash
 cd backend
 python -m pytest tests/ -v
 ```
 
-| Файл | Тестов | Что покрывает |
-|------|--------|---------------|
-| `test_sql_guard.py` | 20 | read-only guard: все разрешённые/заблокированные операторы, CTE-инъекции, disabled-режим |
-| `test_pii_detector.py` | 24 | detect по имени/значениям, mask для 7 типов PII, scan_table с KB-записью |
-| `test_error_handler.py` | 16 | все 10 паттернов ошибок, markdown-формат, truncate, suggestions |
-| `test_rate_limiter.py` | 14 | SQL/ML категории, sliding window, per-user изоляция, disabled |
-| `test_bi_linker.py` | 21 | все 5 BI-инструментов + edge cases, params, time_range |
-| `test_dbt_loader.py` | 19 | manifest.json парсинг, KB-обогащение, semantic_models.yml, layer detection |
-| `test_connectors.py` | 40 | registry, SQLite (CRUD, FK, attach_syntax), ApiConnector (endpoints, flatten) |
-| `test_kb_logs_examples.py` | 26 | KB CRUD, search, LoggingDB, ExampleStore (golden, text-search) |
-| `test_engine.py` | 21 | load_csv, translate_sql, ensure_table_in_duckdb, FK-эвристика, синглтон |
-| `test_tools.py` | 29 | 46 инструментов, sql_query (guard+PII+formats), get_schema, export_xlsx, build_bi_link |
-| `test_tools_extra.py` | 31 | export_data, transform_data, profile_data, smart_summary, attach_database, load_file |
-| `test_api.py` | 31 | auth, knowledge CRUD, logs, metadata, connections/modes, admin enterprise-settings |
+| Файл | Что покрывает |
+|------|---------------|
+| `test_sql_guard.py` | read-only guard: разрешённые/заблокированные операторы, CTE-инъекции |
+| `test_pii_detector.py` | detect по имени/значениям, mask для 7 типов PII, scan_table |
+| `test_error_handler.py` | все паттерны ошибок, markdown-формат, truncate, suggestions |
+| `test_rate_limiter.py` | SQL/ML категории, sliding window, per-user изоляция |
+| `test_bi_linker.py` | все 5 BI-инструментов + edge cases, params, time_range |
+| `test_dbt_loader.py` | manifest.json парсинг, KB-обогащение, semantic_models.yml |
+| `test_connectors.py` | registry, SQLite (CRUD, FK, attach_syntax), ApiConnector |
+| `test_kb_logs_examples.py` | KB CRUD, search, LoggingDB, ExampleStore |
+| `test_engine.py` | load_csv, translate_sql, ensure_table_in_duckdb, FK-эвристика |
+| `test_tools.py` + `test_tools_extra.py` | 46 инструментов, sql_query (guard+PII+formats), export, profile |
+| `test_api.py` | auth, knowledge CRUD, logs, metadata, connections/modes, admin |
+| `test_setup.py` | Setup-визард API: тип, параметры, генерация MCP-конфигов |
 
-### Frontend (vitest, 42 теста)
+### Frontend (vitest)
 
 ```bash
 cd frontend
 npm test
 ```
 
-| Файл | Тестов | Что покрывает |
-|------|--------|---------------|
-| `KnowledgeTab.test.tsx` | 9 | рендер, загрузка tables/metrics, search, dbt/datahub, certified badge |
-| `LogsTab.test.tsx` | 8 | 3 таба (query/error/audit), переключение, empty-state |
-| `BILinkModal.test.tsx` | 8 | 5 BI-инструментов, валидация URL/JSON, time-range, copy |
-| `Sidebar.test.tsx` | 8 | 7 вкладок, BI Link Builder, переключение KB/Logs/БД |
-| `AdminPanel.test.tsx` | 9 | 4 таба, enterprise-настройки, error handling |
-
-### Баги, найденные тестами
-
-1. **`sql_guard` CTE-уязвимость** — `WITH t AS (INSERT...) SELECT 1` проходил guard (ранний return для WITH)
-2. **`pii_detector.mask_row` KeyError** — несоответствие ключей `column` vs `column_name` между KB и mask_row
-3. **`_safe_table_name`** — кириллица заменялась на `_` (regex без `re.UNICODE`)
-4. **`dbt_loader`** — невалидный JSON бросал 500 вместо 400
-5. **`smart_summary`** — распаковка 3-элементных DuckDB DESCRIBE-кортежей в 2 переменные
+| Файл | Что покрывает |
+|------|---------------|
+| `SetupWizard.test.tsx` | 4 шага, выбор типа, генерация MCP-конфигов |
+| `KnowledgeTab.test.tsx` | загрузка tables/metrics, search, dbt/datahub, certified badge |
+| `LogsTab.test.tsx` | 3 таба (query/error/audit), переключение, empty-state |
+| `BILinkModal.test.tsx` | 5 BI-инструментов, валидация URL/JSON, time-range, copy |
+| `SessionList.test.tsx` | файлы, история, переключение вкладок |
+| `AdminPanel.test.tsx` | 4 таба, enterprise-настройки, error handling |
 
 ---
 

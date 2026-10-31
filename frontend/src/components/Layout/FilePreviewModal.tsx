@@ -14,6 +14,7 @@ export function FilePreviewModal({ file, onClose }: Props) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError("");
     previewFile(file.file_id, 50)

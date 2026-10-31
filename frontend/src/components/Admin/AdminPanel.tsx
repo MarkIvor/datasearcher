@@ -3,6 +3,8 @@ import { X, Shield, Users, Database, Settings, Plus, Trash2, Eye, EyeOff, Plug, 
 import type { AuthUser } from "../../api/client";
 import * as api from "../../api/client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 interface Props {
   onClose: () => void;
 }
@@ -15,13 +17,6 @@ export function AdminPanel({ onClose }: Props) {
   const [entSettings, setEntSettings] = useState<api.EnterpriseSettings | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null);
-
-  useEffect(() => {
-    if (tab === "users") loadUsers();
-    if (tab === "settings") loadSettings();
-    if (tab === "connections") loadConnections();
-    if (tab === "enterprise") loadEnterprise();
-  }, [tab]);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -46,6 +41,17 @@ export function AdminPanel({ onClose }: Props) {
     try { setEntSettings(await api.getEnterpriseSettings()); } catch { /* ignore */ }
     setLoading(false);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (tab === "users") loadUsers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (tab === "settings") loadSettings();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (tab === "connections") loadConnections();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (tab === "enterprise") loadEnterprise();
+  }, [tab]);
 
   const toggleSetting = useCallback(async (key: string) => {
     const newVal = appSettings[key] === "true" ? "false" : "true";
@@ -299,11 +305,6 @@ function UserDetailModal({ user, onBack }: { user: AuthUser; onBack: () => void 
   const [saving, setSaving] = useState(false);
   const [addConnOpen, setAddConnOpen] = useState(false);
 
-  useEffect(() => {
-    loadUserLLM();
-    loadUserConns();
-  }, []);
-
   const loadUserLLM = async () => {
     try { setLlm(await api.getAdminUserLLM(user.id)); } catch { /* ignore */ }
   };
@@ -311,6 +312,13 @@ function UserDetailModal({ user, onBack }: { user: AuthUser; onBack: () => void 
   const loadUserConns = async () => {
     try { setUserConns(await api.getAdminUserConnections(user.id)); } catch { /* ignore */ }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUserLLM();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadUserConns();
+  }, []);
 
   const savePermissions = async () => {
     setSaving(true);

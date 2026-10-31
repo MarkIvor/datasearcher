@@ -1,22 +1,25 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useChat } from "./hooks/useChat";
 import { useFiles } from "./hooks/useFiles";
-import { useTheme } from "./hooks/useTheme";
 import { useNotification } from "./hooks/useNotification";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { useQueryHistory } from "./hooks/useQueryHistory";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
-import { Sidebar } from "./components/Layout/Sidebar";
-import { SettingsModal } from "./components/Layout/SettingsModal";
-import { FilePreviewModal } from "./components/Layout/FilePreviewModal";
-import { MessageInput, type MessageInputHandle } from "./components/Chat/MessageInput";
-import { MessageList } from "./components/Chat/MessageList";
+import { LeftColumn } from "./components/Bento/LeftColumn";
+import { RightColumn } from "./components/Bento/RightColumn";
+import { ChatStream } from "./components/Chat/ChatStream";
+import { ChatInputBar, type MessageInputHandle } from "./components/Chat/ChatInputBar";
 import { ComparisonView } from "./components/Chat/ComparisonView";
 import { FileUpload } from "./components/Files/FileUpload";
 import { StatusBar } from "./components/Layout/StatusBar";
 import { AdminPanel } from "./components/Admin/AdminPanel";
+import { SettingsModal } from "./components/Layout/SettingsModal";
+import { FilePreviewModal } from "./components/Layout/FilePreviewModal";
+import { SetupWizard } from "./components/Setup/SetupWizard";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import * as api from "./api/client";
+import type { SetupState } from "./api/client";
 import type { ChatMessage, FileInfo } from "./types/index";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
@@ -26,8 +29,34 @@ function AppInner() {
   const [authPage, setAuthPage] = useState<"login" | "register">("login");
   const [adminOpen, setAdminOpen] = useState(false);
 
+  const [setup, setSetup] = useState<SetupState | null>(null);
+  const [setupChecked, setSetupChecked] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSetup(null);
+      setSetupChecked(false);
+      return;
+    }
+    api.getSetup()
+      .then((s) => {
+        setSetup(s);
+        setShowWizard(!s.completed);
+      })
+      .catch(() => {})
+      .finally(() => setSetupChecked(true));
+  }, [user]);
+
   if (authLoading) {
-    return <div className="auth-page"><div style={{ color: "var(--text-muted)", fontSize: 13 }}>Загрузка...</div></div>;
+    return (
+      <div className="auth-shell">
+        <div style={{ color: "var(--text-muted-light)", fontSize: 13, fontWeight: 600 }}>
+          Загрузка...
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -36,24 +65,59 @@ function AppInner() {
       : <RegisterPage onSwitch={() => setAuthPage("login")} />;
   }
 
-  return <MainApp onLogout={logout} onAdmin={() => setAdminOpen(true)} adminOpen={adminOpen} onCloseAdmin={() => setAdminOpen(false)} />;
+  if (!setupChecked) {
+    return (
+      <div className="auth-shell">
+        <div style={{ color: "var(--text-muted-light)", fontSize: 13, fontWeight: 600 }}>
+          Загрузка...
+        </div>
+      </div>
+    );
+  }
+
+  if (showWizard) {
+    return (
+      <SetupWizard
+        onComplete={(s) => {
+          setSetup(s);
+          setShowWizard(false);
+        }}
+      />
+    );
+  }
+
+  return (
+    <MainApp
+      key="main"
+      onLogout={logout}
+      onAdmin={() => setAdminOpen(true)}
+      adminOpen={adminOpen}
+      onCloseAdmin={() => setAdminOpen(false)}
+      setup={setup}
+      onOpenSetup={() => setShowWizard(true)}
+    />
+  );
 }
 
-function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin }: {
+interface MainAppProps {
   onLogout: () => void;
   onAdmin: () => void;
   adminOpen: boolean;
   onCloseAdmin: () => void;
-}) {
-  const { dark, toggle: toggleTheme } = useTheme();
-  const { requestPermission, notify, playSound } = useNotification();
+  setup: SetupState | null;
+  onOpenSetup: () => void;
+}
+
+function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin, setup, onOpenSetup }: MainAppProps) {
+  const { notify, playSound } = useNotification();
   const { history, add: addHistory, clear: clearHistory } = useQueryHistory();
   const inputHandleRef = useRef<MessageInputHandle>(null);
+  const attachInputRef = useRef<HTMLInputElement>(null);
   const sendMessageRef = useRef<(msg: string) => void>(() => {});
   const { user } = useAuth();
 
   const handleFirstFile = useCallback(
-    (_info: FileInfo) => {
+    () => {
       setTimeout(() => sendMessageRef.current("Сделай краткий обзор структуры данных и построй дашборд с ключевыми метриками"), 300);
     },
     []
@@ -61,7 +125,10 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin }: {
   const { files, uploading, addFile, removeFile, refresh: refreshFiles } = useFiles(handleFirstFile);
   const columnHints = files.flatMap((f) => f.columns);
   const { messages, isStreaming, sendMessage, clearMessages, abort } = useChat(columnHints);
-  sendMessageRef.current = sendMessage;
+
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileInfo | null>(null);
@@ -78,8 +145,6 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin }: {
     }
     prevStreamingRef.current = isStreaming;
   }, [isStreaming, messages, playSound, notify]);
-
-  useEffect(() => { requestPermission(); }, [requestPermission]);
 
   const handleSend = useCallback((content: string) => { addHistory(content); sendMessage(content); }, [sendMessage, addHistory]);
   const handleFileUpload = async (file: File) => { const info = await addFile(file); return info; };
@@ -115,47 +180,91 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin }: {
     const mid = Math.ceil(messages.length / 2);
     setComparison({ left: messages.slice(0, mid), right: messages.slice(mid) });
   }, [messages]);
+  const handleAttach = useCallback(() => { attachInputRef.current?.click(); }, []);
+  const handleAttachFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) await addFile(file);
+    if (attachInputRef.current) attachInputRef.current.value = "";
+  }, [addFile]);
 
   useKeyboardShortcuts({
-    onToggleTheme: toggleTheme,
     onExportPDF: handleExportPDF,
     onClear: handleClearChat,
     onFocusInput: () => inputHandleRef.current?.focus(),
   });
 
   return (
-    <div className="app">
-      <Sidebar
-        files={files}
-        onRemove={removeFile}
-        onClearChat={handleClearChat}
-        onOpenSettings={() => setSettingsOpen(true)}
-        onPreviewFile={(f) => setPreviewFile(f)}
-        onExportPDF={handleExportPDF}
-        hasMessages={messages.length > 0}
-        dark={dark}
-        onToggleTheme={toggleTheme}
-        queryHistory={history}
-        onHistorySelect={handleHistorySelect}
-        onHistoryClear={clearHistory}
-        onCompare={messages.length >= 4 ? handleCompare : undefined}
-        onLogout={onLogout}
-        onAdmin={user?.role === "admin" ? onAdmin : undefined}
-        userName={user?.display_name || user?.email || ""}
-        userRole={user?.role}
-        onSendMessage={handleSend}
-        onFilesChanged={refreshFiles}
-      />
-      <main className="main">
-        {files.length > 0 && (
-          <div className="main-header">
-            <FileUpload files={files} uploading={uploading} onUpload={handleFileUpload} onRemove={removeFile} />
+    <div className="app-shell">
+      <div className="bento-grid">
+        <LeftColumn
+          files={files}
+          onRemove={removeFile}
+          onClearChat={handleClearChat}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onPreviewFile={(f) => setPreviewFile(f)}
+          onExportPDF={handleExportPDF}
+          hasMessages={messages.length > 0}
+          queryHistory={history}
+          onHistorySelect={handleHistorySelect}
+          onHistoryClear={clearHistory}
+          onCompare={messages.length >= 4 ? handleCompare : undefined}
+          onLogout={onLogout}
+          onAdmin={user?.role === "admin" ? onAdmin : undefined}
+          userName={user?.display_name || user?.email || ""}
+          userRole={user?.role}
+          onSendMessage={handleSend}
+          onFilesChanged={refreshFiles}
+          setup={setup}
+          onOpenSetup={onOpenSetup}
+        />
+
+        <section className="bento-col">
+          <div className="bento-canvas">
+            <header className="canvas-header">
+              <span className="canvas-title">Анализ данных</span>
+              <span className="canvas-status">
+                <span className={`live-dot ${isStreaming ? "" : "idle"}`} />
+                {isStreaming ? "Анализ выполняется" : files.length > 0 ? `${files.length} таблиц в работе` : "Ожидание данных"}
+              </span>
+            </header>
+
+            {files.length > 0 && (
+              <div className="file-upload-panel">
+                <FileUpload files={files} uploading={uploading} onUpload={handleFileUpload} onRemove={removeFile} />
+              </div>
+            )}
+
+            <ChatStream
+              messages={messages}
+              onAction={handleQuickAction}
+              onFileUpload={handleFileUpload}
+              uploading={uploading}
+              hasFiles={files.length > 0}
+              onFilesChanged={refreshFiles}
+            />
+
+            <ChatInputBar
+              ref={inputHandleRef}
+              onSend={handleSend}
+              isStreaming={isStreaming}
+              onStop={abort}
+              onAttach={handleAttach}
+            />
+
+            <StatusBar files={files} />
           </div>
-        )}
-        <MessageList messages={messages} onAction={handleQuickAction} onFileUpload={handleFileUpload} uploading={uploading} hasFiles={files.length > 0} onFilesChanged={refreshFiles} />
-        <MessageInput ref={inputHandleRef} onSend={handleSend} isStreaming={isStreaming} onStop={abort} />
-        <StatusBar files={files} />
-      </main>
+        </section>
+
+        <RightColumn
+          files={files}
+          setup={setup}
+          isStreaming={isStreaming}
+          onAction={handleQuickAction}
+        />
+      </div>
+
+      <input ref={attachInputRef} type="file" accept=".xlsx,.xls,.csv,.parquet" onChange={handleAttachFile} hidden />
+
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       {previewFile && <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />}
       {comparison && <ComparisonView left={comparison.left} right={comparison.right} onClose={() => setComparison(null)} onAction={handleQuickAction} />}

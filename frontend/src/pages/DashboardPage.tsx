@@ -7,7 +7,7 @@ import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
-const COLORS = ["#5b6af0", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#06b6d4", "#ec4899", "#6366f1"];
+const COLORS = ["#C5E827", "#2C2C2C", "#919791", "#5F6B5F", "#A8B860", "#3A4A3A", "#D9E2B8", "#6E7A6E"];
 
 function formatValue(val: number | null | undefined, fmt?: string, prefix?: string, suffix?: string) {
   if (val == null) return "—";
@@ -30,15 +30,6 @@ export function DashboardPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (!slug) return;
-    api.getDashboard(slug).then((d) => {
-      setDash(d);
-      if (!d.has_password) loadCards(slug, {});
-      else setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [slug]);
-
   const loadCards = useCallback(async (s: string, f: Record<string, unknown>, t?: string) => {
     setRefreshing(true);
     try {
@@ -48,6 +39,15 @@ export function DashboardPage() {
     setLoading(false);
     setRefreshing(false);
   }, []);
+
+  useEffect(() => {
+    if (!slug) return;
+    api.getDashboard(slug).then((d) => {
+      setDash(d);
+      if (!d.has_password) loadCards(slug, {});
+      else setLoading(false);
+    }).catch(() => setLoading(false));
+  }, [slug]);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +263,7 @@ function DashSelector({ slug, selector, value, onChange }: {
 
 function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Record<string, unknown>[]; x: string; y: string }) {
   const safeData = data.map((d) => ({ ...d, [y]: Number(d[y]) || 0, [x]: d[x] ?? "" }));
-  const axisStyle = { fontSize: 11, fill: "var(--text-muted)" };
+  const axisStyle = { fontSize: 11, fill: "#7A7F7A", fontWeight: 500 };
 
   if (chartType === "line") {
     return (
@@ -273,7 +273,7 @@ function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Rec
           <XAxis dataKey={x} tick={axisStyle} tickLine={false} interval="preserveStartEnd" />
           <YAxis tick={axisStyle} tickLine={false} width={48} />
           <Tooltip /><Legend />
-          <Line type="monotone" dataKey={y} stroke="#5b6af0" strokeWidth={2} dot={{ r: 3 }} />
+          <Line type="monotone" dataKey={y} stroke="#C5E827" strokeWidth={2} dot={{ r: 3 }} />
         </LineChart>
       </ResponsiveContainer>
     );
@@ -286,7 +286,7 @@ function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Rec
           <XAxis dataKey={x} tick={axisStyle} tickLine={false} interval={0} angle={-20} textAnchor="end" height={50} />
           <YAxis tick={axisStyle} tickLine={false} width={48} />
           <Tooltip /><Legend />
-          <Bar dataKey={y} fill="#5b6af0" radius={[4, 4, 0, 0]} />
+          <Bar dataKey={y} fill="#C5E827" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     );
@@ -299,8 +299,8 @@ function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Rec
           <XAxis dataKey={x} tick={axisStyle} tickLine={false} />
           <YAxis tick={axisStyle} tickLine={false} width={48} />
           <Tooltip /><Legend />
-          <defs><linearGradient id="gradFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#5b6af0" stopOpacity={0.3} /><stop offset="100%" stopColor="#5b6af0" stopOpacity={0.02} /></linearGradient></defs>
-          <Area type="monotone" dataKey={y} stroke="#5b6af0" fill="url(#gradFill)" strokeWidth={2} />
+          <defs><linearGradient id="gradFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#C5E827" stopOpacity={0.3} /><stop offset="100%" stopColor="#C5E827" stopOpacity={0.02} /></linearGradient></defs>
+          <Area type="monotone" dataKey={y} stroke="#C5E827" fill="url(#gradFill)" strokeWidth={2} />
         </AreaChart>
       </ResponsiveContainer>
     );
@@ -309,7 +309,7 @@ function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Rec
     return (
       <ResponsiveContainer width="100%" height={300}>
         <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-          <Pie data={safeData} dataKey={y} nameKey={x} cx="50%" cy="45%" outerRadius={80} innerRadius={40} label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`} labelLine={{ stroke: "var(--text-muted)", strokeWidth: 1 }}>
+          <Pie data={safeData} dataKey={y} nameKey={x} cx="50%" cy="45%" outerRadius={80} innerRadius={40} label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`} labelLine={{ stroke: "#7A7F7A", strokeWidth: 1 }}>
             {safeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
           </Pie>
           <Tooltip /><Legend wrapperStyle={{ fontSize: 12 }} />
@@ -325,7 +325,7 @@ function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Rec
           <XAxis dataKey={x} tick={axisStyle} name={x} />
           <YAxis dataKey={y} tick={axisStyle} name={y} width={48} />
           <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-          <Scatter data={safeData} fill="#5b6af0" r={4} />
+          <Scatter data={safeData} fill="#C5E827" r={4} />
         </ScatterChart>
       </ResponsiveContainer>
     );

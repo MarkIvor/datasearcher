@@ -102,10 +102,10 @@ export function BILinkModal({ onClose }: Props) {
             <textarea className="form-input" rows={4} style={{ fontFamily: "monospace", fontSize: 12 }} value={paramsText} onChange={(e) => setParamsText(e.target.value)} />
           </div>
 
-          {error && <div className="error-msg" style={{ color: "var(--danger, #e74c3c)", fontSize: 12, marginBottom: 8 }}>{error}</div>}
+          {error && <div className="error-msg" style={{ color: "var(--error)", fontSize: 12, fontWeight: 500, marginBottom: 8 }}>{error}</div>}
 
           {url && (
-            <div style={{ border: "1px solid var(--border)", borderRadius: 6, padding: 8, marginBottom: 8, background: "var(--bg-elevated, #f7f7f8)" }}>
+            <div style={{ border: "1px dashed var(--border-dashed)", borderRadius: 14, padding: 8, marginBottom: 8, background: "var(--surface-idle)" }}>
               <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>Сгенерированная ссылка:</div>
               <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
                 <code style={{ fontSize: 11, wordBreak: "break-all", flex: 1 }}>{url}</code>
