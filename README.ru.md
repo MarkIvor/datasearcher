@@ -9,6 +9,10 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Languages](https://img.shields.io/badge/Языки-EN%20%7C%20RU-green)
 
+[![Backend tests](https://github.com/MarkIvor/datasearcher/actions/workflows/backend.yml/badge.svg)](../../actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/MarkIvor/datasearcher/actions/workflows/frontend.yml/badge.svg)](../../actions/workflows/frontend.yml)
+[![MCP Smoke](https://github.com/MarkIvor/datasearcher/actions/workflows/mcp.yml/badge.svg)](../../actions/workflows/mcp.yml)
+
 > Загрузи таблицу или подключись к БД. Задай вопрос. Получи ответ с графиками.
 > 46 аналитических инструментов, ML-прогнозы, дашборды, enterprise-безопасность.
 
@@ -606,7 +610,11 @@ ollama serve
 
 ## Тесты
 
-### Backend (pytest, 332+ теста)
+Полный набор прогоняется при каждом пуше через GitHub Actions (бейджи в шапке):
+backend — 354 pytest-теста, frontend — lint + типы + 58 vitest-тестов + production-сборка,
+MCP — smoke-тест установки пакета.
+
+### Backend (pytest, 354+ теста)
 
 ```bash
 cd backend

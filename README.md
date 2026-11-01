@@ -9,6 +9,10 @@
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Languages](https://img.shields.io/badge/Languages-EN%20%7C%20RU-green)
 
+[![Backend tests](https://github.com/MarkIvor/datasearcher/actions/workflows/backend.yml/badge.svg)](../../actions/workflows/backend.yml)
+[![Frontend CI](https://github.com/MarkIvor/datasearcher/actions/workflows/frontend.yml/badge.svg)](../../actions/workflows/frontend.yml)
+[![MCP Smoke](https://github.com/MarkIvor/datasearcher/actions/workflows/mcp.yml/badge.svg)](../../actions/workflows/mcp.yml)
+
 > Upload a table or connect a database. Ask a question. Get an answer with charts.
 > 46 analytical tools, ML forecasts, dashboards, enterprise-grade security.
 
@@ -607,6 +611,10 @@ ollama serve
 ---
 
 ## Tests
+
+The full suite runs on every push via GitHub Actions (see the badges above):
+backend — 354 pytest tests, frontend — lint + typecheck + 58 vitest tests + production build,
+MCP — package install smoke test.
 
 ### Backend (pytest, 354+ tests)
 
