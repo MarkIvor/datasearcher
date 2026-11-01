@@ -3,6 +3,7 @@ import type { ChatMessage } from "../../types";
 import { MessageBubble } from "./MessageBubble";
 import { ArrowUpRight, Database, Loader2, Plus, Sparkles } from "lucide-react";
 import * as api from "../../api/client";
+import { useI18n } from "../../i18n";
 
 interface Props {
   messages: ChatMessage[];
@@ -13,14 +14,8 @@ interface Props {
   onFilesChanged?: () => void;
 }
 
-const QUICK_ACTIONS = [
-  { title: "Обзор данных", sub: "структура, типы, пропуски", query: "Сделай краткий обзор структуры данных: типы колонок, пропуски, уникальные значения" },
-  { title: "Дашборд", sub: "ключевые метрики и графики", query: "Построй дашборд с ключевыми метриками и визуализациями" },
-  { title: "Аудит качества", sub: "дубликаты, аномалии", query: "Проведи аудит качества данных: найди дубликаты, пропуски, аномалии и выбросы" },
-  { title: "Инсайты", sub: "топ-5 находок автоматически", query: "Найди топ-5 инсайтов в данных автоматически" },
-];
-
 export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFiles, onFilesChanged }: Props) {
+  const { t } = useI18n();
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -42,6 +37,15 @@ export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFil
     if (inputRef.current) inputRef.current.value = "";
   };
 
+  const quickActions = [
+    { title: t("chat.qa1.title"), sub: t("chat.qa1.sub"), query: t("chat.query.overview") },
+    { title: t("chat.qa2.title"), sub: t("chat.qa2.sub"), query: t("chat.query.dashboard") },
+    { title: t("chat.qa3.title"), sub: t("chat.qa3.sub"), query: t("chat.query.audit") },
+    { title: t("chat.qa4.title"), sub: t("chat.qa4.sub"), query: t("chat.query.insights") },
+  ];
+
+  const [heroLine1, heroLine2] = t("chat.heroTitle").split("\n");
+
   return (
     <div
       className="stream"
@@ -55,11 +59,8 @@ export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFil
             <div className="empty-hero-badge">
               <Sparkles size={17} />
             </div>
-            <h1 className="empty-hero-title">Анализ данных<br />через диалог</h1>
-            <p className="empty-hero-sub">
-              Загрузите таблицу или подключитесь к БД — задайте вопрос на русском,
-              ИИ сам напишет SQL, построит графики и найдёт инсайты.
-            </p>
+            <h1 className="empty-hero-title">{heroLine1}<br />{heroLine2}</h1>
+            <p className="empty-hero-sub">{t("chat.heroSub")}</p>
           </div>
 
           {!hasFiles && (
@@ -73,9 +74,9 @@ export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFil
                 </span>
                 <span className="upload-pill-text">
                   <span className="upload-pill-title">
-                    {uploading ? "Загрузка файла..." : "Перетащите файл или нажмите"}
+                    {uploading ? t("chat.uploadActive") : t("chat.upload")}
                   </span>
-                  <span className="upload-pill-hint">.xlsx, .csv, .parquet — до 100 МБ</span>
+                  <span className="upload-pill-hint">{t("chat.uploadHint")}</span>
                 </span>
                 <input
                   ref={inputRef}
@@ -89,7 +90,7 @@ export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFil
               <DBConnectZone onConnected={onFilesChanged} />
 
               <div className="qa-grid">
-                {QUICK_ACTIONS.map((qa) => (
+                {quickActions.map((qa) => (
                   <button key={qa.title} className="qa-card" onClick={() => onAction?.(qa.query)}>
                     <span className="qa-badge"><ArrowUpRight size={14} /></span>
                     <span>
@@ -113,6 +114,7 @@ export function ChatStream({ messages, onAction, onFileUpload, uploading, hasFil
 }
 
 function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [dbType, setDbType] = useState("postgresql");
@@ -141,9 +143,9 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
       resetForm();
       if (r.ok) {
         onConnected?.();
-      } else alert(r.message || "Не удалось подключить");
+      } else alert(r.message || t("chat.dbForm.attachFailed"));
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Ошибка подключения");
+      alert(err instanceof Error ? err.message : t("chat.dbForm.error"));
     }
     setSubmitting(false);
   };
@@ -153,8 +155,8 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
       <div className="upload-pill" onClick={() => setOpen(true)}>
         <span className="upload-pill-icon"><Database size={16} /></span>
         <span className="upload-pill-text">
-          <span className="upload-pill-title">Подключить базу данных</span>
-          <span className="upload-pill-hint">PostgreSQL, MySQL, ClickHouse, SQLite</span>
+          <span className="upload-pill-title">{t("chat.dbConnect")}</span>
+          <span className="upload-pill-hint">{t("chat.dbHint")}</span>
         </span>
       </div>
     );
@@ -162,14 +164,14 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
 
   return (
     <form className="db-connect-form" onSubmit={handleSubmit}>
-      <div className="db-form-title"><Database size={16} /> Подключение к БД</div>
+      <div className="db-form-title"><Database size={16} /> {t("chat.dbForm.title")}</div>
       <div className="db-form-row">
         <div className="db-form-field">
-          <label>Название</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Моя БД" />
+          <label>{t("chat.dbForm.name")}</label>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={t("chat.dbForm.namePlaceholder")} />
         </div>
         <div className="db-form-field" style={{ maxWidth: 140 }}>
-          <label>Тип</label>
+          <label>{t("chat.dbForm.type")}</label>
           <select value={dbType} onChange={(e) => {
             setDbType(e.target.value);
             setPort(e.target.value === "mysql" ? 3306 : e.target.value === "clickhouse" ? 8123 : 5432);
@@ -185,39 +187,39 @@ function DBConnectZone({ onConnected }: { onConnected?: () => void }) {
         <>
           <div className="db-form-row">
             <div className="db-form-field">
-              <label>Хост</label>
+              <label>{t("chat.dbForm.host")}</label>
               <input type="text" value={host} onChange={(e) => setHost(e.target.value)} placeholder="localhost" />
             </div>
             <div className="db-form-field" style={{ maxWidth: 90 }}>
-              <label>Порт</label>
+              <label>{t("chat.dbForm.port")}</label>
               <input type="number" value={port} onChange={(e) => setPort(Number(e.target.value))} />
             </div>
           </div>
           <div className="db-form-row">
             <div className="db-form-field">
-              <label>Пользователь</label>
+              <label>{t("chat.dbForm.user")}</label>
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
             </div>
             <div className="db-form-field">
-              <label>Пароль</label>
+              <label>{t("chat.dbForm.password")}</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
           </div>
         </>
       )}
       <div className="db-form-field">
-        <label>{dbType === "sqlite" ? "Путь к файлу" : "База данных"}</label>
-        <input type="text" value={database} onChange={(e) => setDatabase(e.target.value)} required placeholder={dbType === "sqlite" ? "/path/to/db.sqlite" : "mydb"} />
+        <label>{dbType === "sqlite" ? t("chat.dbForm.sqlitePath") : t("chat.dbForm.database")}</label>
+        <input type="text" value={database} onChange={(e) => setDatabase(e.target.value)} required placeholder={dbType === "sqlite" ? t("chat.dbForm.sqlitePlaceholder") : t("chat.dbForm.databasePlaceholder")} />
       </div>
       <label className="db-form-check">
         <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
-        Публичное (доступно всем)
+        {t("chat.dbForm.public")}
       </label>
       <div className="db-form-actions">
         <button type="submit" className="db-form-submit" disabled={submitting}>
-          {submitting ? "Подключение..." : "Подключить"}
+          {submitting ? t("chat.dbForm.submitting") : t("chat.dbForm.submit")}
         </button>
-        <button type="button" className="db-form-cancel" onClick={() => { setOpen(false); resetForm(); }}>Отмена</button>
+        <button type="button" className="db-form-cancel" onClick={() => { setOpen(false); resetForm(); }}>{t("common.cancel")}</button>
       </div>
     </form>
   );

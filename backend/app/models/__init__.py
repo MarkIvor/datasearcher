@@ -18,6 +18,7 @@ class FileListResponse(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     session_id: str | None = None
+    lang: str = "ru"
 
 
 class ToolCallInfo(BaseModel):

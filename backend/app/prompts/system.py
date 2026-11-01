@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+LANG_RULES = {
+    "ru": "ЯЗЫК ОТВЕТОВ: всегда отвечай пользователю на русском языке.",
+    "en": "RESPONSE LANGUAGE: always respond to the user in English, regardless of the language of this system prompt.",
+}
 
-def build_system_prompt(table_info: list[dict]) -> str:
+
+def build_system_prompt(table_info: list[dict], lang: str = "ru") -> str:
     tables_section = ""
     if table_info:
         tables_section = "\n## Загруженные таблицы\n\n"
@@ -113,6 +118,8 @@ DuckDB поддерживает: оконные функции, CTE (WITH), UNIO
 - Топ-N по категории: `SELECT cat, SUM(val) as total FROM t GROUP BY cat ORDER BY total DESC LIMIT 10`
 - Доля категории: `SELECT cat, COUNT(*) * 100.0 / SUM(COUNT(*)) OVER() as pct FROM t GROUP BY cat`
 - Скользящее среднее: `SELECT date, AVG(val) OVER(ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) FROM t`
+
+{LANG_RULES.get(lang, LANG_RULES["ru"])}
 """
 
 

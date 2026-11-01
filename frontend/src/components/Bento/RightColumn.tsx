@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowUpRight, Check } from "lucide-react";
 import type { FileInfo } from "../../types";
 import type { SetupState } from "../../api/client";
+import { useI18n } from "../../i18n";
 
 interface Props {
   files: FileInfo[];
@@ -10,83 +11,84 @@ interface Props {
   onAction: (query: string) => void;
 }
 
-const TEMPLATES = [
-  { id: "overview", label: "Обзор данных", query: "Сделай краткий обзор структуры данных: типы колонок, пропуски, уникальные значения" },
-  { id: "dashboard", label: "Дашборд", query: "Построй дашборд с ключевыми метриками и визуализациями" },
-  { id: "audit", label: "Аудит качества", query: "Проведи аудит качества данных: найди дубликаты, пропуски, аномалии и выбросы" },
-  { id: "insights", label: "Инсайты", query: "Найди топ-5 инсайтов в данных автоматически" },
-];
-
 export function RightColumn({ files, setup, isStreaming, onAction }: Props) {
+  const { t, fmt } = useI18n();
   const [selected, setSelected] = useState<string>("overview");
-  const active = TEMPLATES.find((t) => t.id === selected) ?? TEMPLATES[0];
+
+  const templates = [
+    { id: "overview", label: t("right.template.overview"), query: t("chat.query.overview") },
+    { id: "dashboard", label: t("right.template.dashboard"), query: t("chat.query.dashboard") },
+    { id: "audit", label: t("right.template.audit"), query: t("chat.query.audit") },
+    { id: "insights", label: t("right.template.insights"), query: t("chat.query.insights") },
+  ];
+  const active = templates.find((tpl) => tpl.id === selected) ?? templates[0];
 
   const totalRows = files.reduce((sum, f) => sum + f.row_count, 0);
   const totalCols = files.reduce((sum, f) => sum + f.columns.length, 0);
-  const modeLabel = setup?.mode === "mcp" ? "MCP" : setup?.mode === "interface" ? "Interface" : "—";
-  const llmModel = setup?.llm?.model || "не задана";
+  const modeLabel = setup?.mode === "mcp" ? t("right.modeMcp") : setup?.mode === "interface" ? t("right.modeInterface") : "—";
+  const llmModel = setup?.llm?.model || t("right.notSet");
 
   return (
     <div className="bento-col bento-right">
       <section className="summary-card">
         <div className="summary-head">
-          <span className="summary-title">Состояние</span>
+          <span className="summary-title">{t("right.summary")}</span>
           <span className={`summary-status-pill ${files.length > 0 ? "active" : ""}`}>
             <span className="pill-dot" />
-            {files.length > 0 ? "Active" : "Draft"}
+            {files.length > 0 ? t("right.active") : t("right.draft")}
           </span>
         </div>
 
         <div className="summary-kv">
           <div className="summary-kv-row">
-            <span className="summary-key">Тип использования</span>
+            <span className="summary-key">{t("right.type")}</span>
             <span className="summary-value">{modeLabel}</span>
           </div>
           <div className="summary-kv-row">
-            <span className="summary-key">LLM модель</span>
+            <span className="summary-key">{t("right.llm")}</span>
             <span className="summary-value">{llmModel}</span>
           </div>
           <div className="summary-kv-row">
-            <span className="summary-key">Таблиц загружено</span>
+            <span className="summary-key">{t("right.tables")}</span>
             <span className="summary-value">{files.length}</span>
           </div>
           <div className="summary-kv-row">
-            <span className="summary-key">Стрим</span>
-            <span className="summary-value">{isStreaming ? "выполняется" : "ожидание"}</span>
+            <span className="summary-key">{t("right.stream")}</span>
+            <span className="summary-value">{isStreaming ? t("right.streamActive") : t("right.streamIdle")}</span>
           </div>
         </div>
 
         <hr className="summary-divider" />
-        <div className="summary-metric-label">Строк в анализе</div>
-        <div className="summary-metric-value">{totalRows.toLocaleString("ru-RU")}</div>
+        <div className="summary-metric-label">{t("right.rowsMetric")}</div>
+        <div className="summary-metric-value">{fmt(totalRows)}</div>
       </section>
 
       <div className="info-pills">
         <div className="info-pill">
-          <span className="info-pill-value">{totalCols.toLocaleString("ru-RU")}</span>
-          <span className="info-pill-label">Колонок</span>
+          <span className="info-pill-value">{fmt(totalCols)}</span>
+          <span className="info-pill-label">{t("right.colsPill")}</span>
         </div>
         <div className="info-pill">
           <span className="info-pill-value">{setup?.connections_count ?? 0}</span>
-          <span className="info-pill-label">Подключений БД</span>
+          <span className="info-pill-label">{t("right.connsPill")}</span>
         </div>
       </div>
 
       <section className="action-card">
         <div className="action-head">
-          <span className="action-title">Анализ</span>
+          <span className="action-title">{t("right.action")}</span>
         </div>
 
-        {TEMPLATES.map((t) => (
+        {templates.map((tpl) => (
           <button
-            key={t.id}
-            className={`toggle-pill ${selected === t.id ? "selected" : ""}`}
-            onClick={() => setSelected(t.id)}
+            key={tpl.id}
+            className={`toggle-pill ${selected === tpl.id ? "selected" : ""}`}
+            onClick={() => setSelected(tpl.id)}
             disabled={isStreaming}
           >
-            <span>{t.label}</span>
+            <span>{tpl.label}</span>
             <span className="toggle-check">
-              {selected === t.id && <Check size={13} strokeWidth={3} />}
+              {selected === tpl.id && <Check size={13} strokeWidth={3} />}
             </span>
           </button>
         ))}
@@ -95,16 +97,16 @@ export function RightColumn({ files, setup, isStreaming, onAction }: Props) {
           {setup?.enterprise && (
             <>
               <span className={`sec-chip ${setup.enterprise.read_only ? "on" : ""}`}>
-                <span className="chip-dot" /> read-only
+                <span className="chip-dot" /> {t("right.sec.readonly")}
               </span>
               <span className={`sec-chip ${setup.enterprise.pii_masking ? "on" : ""}`}>
-                <span className="chip-dot" /> PII
+                <span className="chip-dot" /> {t("right.sec.pii")}
               </span>
               <span className={`sec-chip ${setup.enterprise.log_enabled ? "on" : ""}`}>
-                <span className="chip-dot" /> логи
+                <span className="chip-dot" /> {t("right.sec.logs")}
               </span>
               <span className={`sec-chip ${setup.enterprise.rate_limit_enabled ? "on" : ""}`}>
-                <span className="chip-dot" /> rate limit
+                <span className="chip-dot" /> {t("right.sec.ratelimit")}
               </span>
             </>
           )}
@@ -114,9 +116,9 @@ export function RightColumn({ files, setup, isStreaming, onAction }: Props) {
           className="cta-btn"
           onClick={() => onAction(active.query)}
           disabled={files.length === 0 || isStreaming}
-          title={files.length === 0 ? "Сначала загрузите данные" : "Запустить анализ"}
+          title={files.length === 0 ? t("right.cta.hint") : t("right.cta.run")}
         >
-          <span>{files.length === 0 ? "Загрузите данные" : "Запустить анализ"}</span>
+          <span>{files.length === 0 ? t("right.cta.noData") : t("right.cta.run")}</span>
           <span className="cta-badge"><ArrowUpRight size={15} /></span>
         </button>
       </section>

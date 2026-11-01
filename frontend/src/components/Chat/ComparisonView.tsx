@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Columns2 } from "lucide-react";
 import type { ChatMessage } from "../../types";
 import { MessageBubble } from "./MessageBubble";
+import { useI18n } from "../../i18n";
 
 interface Props {
   left: ChatMessage[];
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function ComparisonView({ left, right, onClose, onAction }: Props) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<"left" | "right">("left");
 
   return (
@@ -21,13 +23,13 @@ export function ComparisonView({ left, right, onClose, onAction }: Props) {
             className={`comparison-tab ${activeTab === "left" ? "active" : ""}`}
             onClick={() => setActiveTab("left")}
           >
-            <Columns2 size={13} /> Анализ A
+            <Columns2 size={13} /> {t("compare.analysisA")}
           </button>
           <button
             className={`comparison-tab ${activeTab === "right" ? "active" : ""}`}
             onClick={() => setActiveTab("right")}
           >
-            <Columns2 size={13} /> Анализ B
+            <Columns2 size={13} /> {t("compare.analysisB")}
           </button>
         </div>
         <button className="comparison-close" onClick={onClose}>

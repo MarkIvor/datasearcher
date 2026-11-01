@@ -1,20 +1,23 @@
+import { useI18n } from "../../i18n";
+
 interface Props {
   files: { table_name: string; columns: { name: string; type: string }[]; row_count: number }[];
 }
 
 export function SchemaDiagram({ files }: Props) {
+  const { t, fmt } = useI18n();
   if (files.length === 0) return null;
 
   return (
     <div className="er-schema">
-      <div className="er-schema-title">Схема данных</div>
+      <div className="er-schema-title">{t("schema.title")}</div>
       <div className="er-tables">
         {files.map((f) => (
           <div key={f.table_name} className="er-table">
             <div className="er-table-header">
               {f.table_name}
               <span style={{ fontWeight: 400, opacity: 0.7, marginLeft: 6, fontSize: 9 }}>
-                {f.row_count.toLocaleString()} строк
+                {t("schema.rows", { n: fmt(f.row_count) })}
               </span>
             </div>
             <div className="er-table-cols">

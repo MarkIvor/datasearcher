@@ -21,10 +21,12 @@ import { RegisterPage } from "./pages/RegisterPage";
 import * as api from "./api/client";
 import type { SetupState } from "./api/client";
 import type { ChatMessage, FileInfo } from "./types/index";
+import { useI18n } from "./i18n";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 function AppInner() {
+  const { t } = useI18n();
   const { user, loading: authLoading, logout } = useAuth();
   const [authPage, setAuthPage] = useState<"login" | "register">("login");
   const [adminOpen, setAdminOpen] = useState(false);
@@ -53,7 +55,7 @@ function AppInner() {
     return (
       <div className="auth-shell">
         <div style={{ color: "var(--text-muted-light)", fontSize: 13, fontWeight: 600 }}>
-          Загрузка...
+          {t("common.loading")}
         </div>
       </div>
     );
@@ -69,7 +71,7 @@ function AppInner() {
     return (
       <div className="auth-shell">
         <div style={{ color: "var(--text-muted-light)", fontSize: 13, fontWeight: 600 }}>
-          Загрузка...
+          {t("common.loading")}
         </div>
       </div>
     );
@@ -109,6 +111,7 @@ interface MainAppProps {
 }
 
 function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin, setup, onOpenSetup }: MainAppProps) {
+  const { t } = useI18n();
   const { notify, playSound } = useNotification();
   const { history, add: addHistory, clear: clearHistory } = useQueryHistory();
   const inputHandleRef = useRef<MessageInputHandle>(null);
@@ -118,9 +121,9 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin, setup, onOpenSetu
 
   const handleFirstFile = useCallback(
     () => {
-      setTimeout(() => sendMessageRef.current("Сделай краткий обзор структуры данных и построй дашборд с ключевыми метриками"), 300);
+      setTimeout(() => sendMessageRef.current(t("chat.autoMessage")), 300);
     },
-    []
+    [t]
   );
   const { files, uploading, addFile, removeFile, refresh: refreshFiles } = useFiles(handleFirstFile);
   const columnHints = files.flatMap((f) => f.columns);
@@ -140,7 +143,7 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin, setup, onOpenSetu
       playSound();
       const last = messages[messages.length - 1];
       if (last?.role === "assistant") {
-        notify("DataSearcher", "Анализ завершён");
+        notify("DataSearcher", t("notify.done"));
       }
     }
     prevStreamingRef.current = isStreaming;
@@ -155,7 +158,7 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin, setup, onOpenSetu
       const chartElements = document.querySelectorAll(".chart-block");
       for (const el of chartElements) {
         const titleEl = el.querySelector(".chart-title");
-        const title = titleEl?.textContent || "График";
+        const title = titleEl?.textContent || t("chart.chart");
         try {
           const { toPng } = await import("html-to-image");
           const dataUrl = await toPng(el as HTMLElement, { backgroundColor: "#ffffff", pixelRatio: 2 });
@@ -221,10 +224,10 @@ function MainApp({ onLogout, onAdmin, adminOpen, onCloseAdmin, setup, onOpenSetu
         <section className="bento-col">
           <div className="bento-canvas">
             <header className="canvas-header">
-              <span className="canvas-title">Анализ данных</span>
+              <span className="canvas-title">{t("chat.canvasTitle")}</span>
               <span className="canvas-status">
                 <span className={`live-dot ${isStreaming ? "" : "idle"}`} />
-                {isStreaming ? "Анализ выполняется" : files.length > 0 ? `${files.length} таблиц в работе` : "Ожидание данных"}
+                {isStreaming ? t("chat.statusStreaming") : files.length > 0 ? t("chat.statusTables", { n: files.length }) : t("chat.statusWaiting")}
               </span>
             </header>
 

@@ -1,6 +1,7 @@
 import { useState, useRef, type DragEvent } from "react";
 import { Upload, FileSpreadsheet, X, Loader2 } from "lucide-react";
 import type { FileInfo } from "../../types";
+import { useI18n } from "../../i18n";
 
 interface Props {
   files: FileInfo[];
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function FileUpload({ files, uploading, onUpload, onRemove }: Props) {
+  const { t, fmt } = useI18n();
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -28,7 +30,7 @@ export function FileUpload({ files, uploading, onUpload, onRemove }: Props) {
 
   return (
     <div className="file-upload-panel">
-      <h3>Файлы</h3>
+      <h3>{t("files.title")}</h3>
 
       <div
         className={`drop-zone ${dragOver ? "drag-over" : ""}`}
@@ -45,8 +47,8 @@ export function FileUpload({ files, uploading, onUpload, onRemove }: Props) {
         ) : (
           <Upload size={20} />
         )}
-        <span>{uploading ? "Загрузка..." : "Перетащите файл или нажмите"}</span>
-        <span className="hint">.xlsx, .csv</span>
+        <span>{uploading ? t("files.uploading") : t("files.drop")}</span>
+        <span className="hint">{t("files.hint")}</span>
         <input
           ref={inputRef}
           type="file"
@@ -63,13 +65,13 @@ export function FileUpload({ files, uploading, onUpload, onRemove }: Props) {
             <div className="file-info">
               <span className="file-name">{f.table_name}</span>
               <span className="file-meta">
-                {f.file_type.toUpperCase()} &middot; {f.row_count.toLocaleString()} стр.
+                {f.file_type.toUpperCase()} &middot; {t("files.rowsShort", { n: fmt(f.row_count) })}
               </span>
             </div>
             <button
               className="file-remove"
               onClick={() => onRemove(f.file_id)}
-              title="Удалить"
+              title={t("common.delete")}
             >
               <X size={14} />
             </button>

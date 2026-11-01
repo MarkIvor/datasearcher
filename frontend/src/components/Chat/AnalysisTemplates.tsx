@@ -1,65 +1,38 @@
 import { BarChart3, Search, Shield, TrendingUp, Lightbulb, FileText } from "lucide-react";
+import { useI18n } from "../../i18n";
 
 interface Props {
   onSelect: (query: string) => void;
 }
 
-const TEMPLATES = [
-  {
-    icon: Lightbulb,
-    title: "Обзор данных",
-    desc: "Структура, типы, пропуски, топ-значения",
-    query: "Сделай краткий обзор структуры данных: типы колонок, пропуски, уникальные значения",
-  },
-  {
-    icon: BarChart3,
-    title: "Дашборд",
-    desc: "Ключевые метрики и графики",
-    query: "Построй дашборд с ключевыми метриками и визуализациями",
-  },
-  {
-    icon: Shield,
-    title: "Аудит качества",
-    desc: "Дубликаты, аномалии, пропуски",
-    query: "Проведи аудит качества данных: найди дубликаты, пропуски, аномалии и выбросы",
-  },
-  {
-    icon: TrendingUp,
-    title: "Тренды и прогноз",
-    desc: "Временные ряды и прогнозирование",
-    query: "Проанализируй временные тренды и построй прогноз",
-  },
-  {
-    icon: Search,
-    title: "Корреляции",
-    desc: "Связи между переменными",
-    query: "Найди корреляции и взаимосвязи между переменными",
-  },
-  {
-    icon: FileText,
-    title: "История данных",
-    desc: "Полный нарратив и инсайты",
-    query: "Расскажи историю данных — ключевые находки и инсайты",
-  },
-];
-
 export function AnalysisTemplates({ onSelect }: Props) {
+  const { t } = useI18n();
+
+  const templates = [
+    { icon: Lightbulb, title: t("tpl.overview"), desc: t("tpl.overviewDesc"), query: t("chat.query.overview") },
+    { icon: BarChart3, title: t("tpl.dashboard"), desc: t("tpl.dashboardDesc"), query: t("chat.query.dashboard") },
+    { icon: Shield, title: t("tpl.audit"), desc: t("tpl.auditDesc"), query: t("chat.query.audit") },
+    { icon: TrendingUp, title: t("tpl.trend"), desc: t("tpl.trendDesc"), query: t("tpl.query.trend") },
+    { icon: Search, title: t("tpl.correlations"), desc: t("tpl.correlationsDesc"), query: t("tpl.query.correlations") },
+    { icon: FileText, title: t("tpl.story"), desc: t("tpl.storyDesc"), query: t("tpl.query.story") },
+  ];
+
   return (
     <div className="analysis-templates">
-      <div className="at-title">Шаблоны анализа</div>
+      <div className="at-title">{t("tpl.title")}</div>
       <div className="at-grid">
-        {TEMPLATES.map((t) => (
+        {templates.map((tpl) => (
           <button
-            key={t.title}
+            key={tpl.title}
             className="at-card"
-            onClick={() => onSelect(t.query)}
+            onClick={() => onSelect(tpl.query)}
           >
             <div className="at-icon">
-              <t.icon size={17} />
+              <tpl.icon size={17} />
             </div>
             <div className="at-info">
-              <span className="at-name">{t.title}</span>
-              <span className="at-desc">{t.desc}</span>
+              <span className="at-name">{tpl.title}</span>
+              <span className="at-desc">{tpl.desc}</span>
             </div>
           </button>
         ))}
@@ -67,4 +40,3 @@ export function AnalysisTemplates({ onSelect }: Props) {
     </div>
   );
 }
-

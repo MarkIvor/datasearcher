@@ -6,6 +6,7 @@ import {
   testLLMConnection,
 } from "../../api/client";
 import type { ConnectionTestResult } from "../../types";
+import { useI18n } from "../../i18n";
 
 interface Props {
   open: boolean;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export function SettingsModal({ open, onClose }: Props) {
+  const { t } = useI18n();
   const [baseUrl, setBaseUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("");
@@ -57,7 +59,7 @@ export function SettingsModal({ open, onClose }: Props) {
         }
       } else {
         setConnectionStatus("disconnected");
-        setConnectionError(result.error || "Не удалось подключиться");
+        setConnectionError(result.error || t("modal.testStatus.fail"));
       }
     } catch (e) {
       setConnectionStatus("disconnected");
@@ -85,7 +87,7 @@ export function SettingsModal({ open, onClose }: Props) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Подключение LLM</h2>
+          <h2>{t("modal.llmTitle")}</h2>
           <button className="modal-close" onClick={onClose}>
             <X size={20} />
           </button>
@@ -93,7 +95,7 @@ export function SettingsModal({ open, onClose }: Props) {
 
         <div className="modal-body">
           <div className="form-group">
-            <label>Base URL</label>
+            <label>{t("modal.baseUrl")}</label>
             <input
               type="text"
               value={baseUrl}
@@ -101,25 +103,25 @@ export function SettingsModal({ open, onClose }: Props) {
               placeholder="http://localhost:11434/v1"
             />
             <span className="input-hint">
-              OpenAI-совместимый API (Ollama, vLLM, OpenAI и др.)
+              {t("modal.baseUrlHint")}
             </span>
           </div>
 
           <div className="form-group">
-            <label>API Key</label>
+            <label>{t("modal.apiKey")}</label>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-... (оставьте пустым для локальных моделей)"
+              placeholder={t("modal.apiKeyPlaceholder")}
             />
             <span className="input-hint">
-              Необязательно для локальных моделей (Ollama, LM Studio)
+              {t("modal.apiKeyHint")}
             </span>
           </div>
 
           <div className="form-group">
-            <label>Модель</label>
+            <label>{t("modal.model")}</label>
             {availableModels.length > 0 ? (
               <>
                 <input
@@ -144,7 +146,7 @@ export function SettingsModal({ open, onClose }: Props) {
               />
             )}
             <span className="input-hint">
-              Имя модели, распознаваемое вашим LLM-провайдером
+              {t("modal.modelHint")}
             </span>
           </div>
 
@@ -161,21 +163,21 @@ export function SettingsModal({ open, onClose }: Props) {
               {connectionStatus === "testing" && (
                 <>
                   <Loader2 size={16} className="spin" />
-                  Проверка подключения...
+                  {t("modal.testStatus.testing")}
                 </>
               )}
               {connectionStatus === "connected" && (
                 <>
                   <Wifi size={16} />
-                  Подключено{" "}
+                  {t("modal.testStatus.ok")}{" "}
                   {availableModels.length > 0 &&
-                    `(${availableModels.length} моделей)`}
+                    t("modal.connectedModels", { n: availableModels.length })}
                 </>
               )}
               {connectionStatus === "disconnected" && (
                 <>
                   <WifiOff size={16} />
-                  {connectionError || "Не удалось подключиться"}
+                  {connectionError || t("modal.testStatus.fail")}
                 </>
               )}
             </div>
@@ -184,14 +186,14 @@ export function SettingsModal({ open, onClose }: Props) {
 
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={handleTest}>
-            Проверить
+            {t("common.test")}
           </button>
           <button
             className="btn btn-primary"
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Сохранение..." : "Сохранить"}
+            {saving ? t("modal.saving") : t("modal.save")}
           </button>
         </div>
       </div>

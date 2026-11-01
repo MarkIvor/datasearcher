@@ -1,3 +1,4 @@
+import { translate, getLang } from "../i18n";
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export async function uploadFile(file: File): Promise<import("../types").FileInfo> {
@@ -76,12 +77,13 @@ export function getExportUrl(exportId: string): string {
 export async function* fetchChatStream(
   message: string,
   sessionId?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  lang?: string
 ): AsyncGenerator<import("../types").SSEEvent> {
   const resp = await fetch(`${API_BASE}/api/chat/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, session_id: sessionId }),
+    body: JSON.stringify({ message, session_id: sessionId, lang: lang || "ru" }),
     credentials: "include",
     signal,
   });
@@ -175,8 +177,8 @@ export async function login(email: string, password: string): Promise<{ access_t
     credentials: "include",
   });
   if (!resp.ok) {
-    const data = await resp.json().catch(() => ({ detail: "Ошибка входа" }));
-    throw new Error(data.detail || "Ошибка входа");
+    const data = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(data.detail || translate(getLang(), "api.loginFailed"));
   }
   return resp.json();
 }
@@ -189,8 +191,8 @@ export async function register(email: string, password: string, display_name: st
     credentials: "include",
   });
   if (!resp.ok) {
-    const data = await resp.json().catch(() => ({ detail: "Ошибка регистрации" }));
-    throw new Error(data.detail || "Ошибка регистрации");
+    const data = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(data.detail || translate(getLang(), "api.registerFailed"));
   }
   return resp.json();
 }
@@ -421,8 +423,8 @@ export async function generateDashboard(title?: string, description?: string, pa
     credentials: "include",
   });
   if (!resp.ok) {
-    const data = await resp.json().catch(() => ({ detail: "Ошибка генерации" }));
-    throw new Error(data.detail || "Ошибка генерации");
+    const data = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(data.detail || translate(getLang(), "api.generationFailed"));
   }
   return resp.json();
 }
@@ -435,7 +437,7 @@ export async function listDashboards(): Promise<DashboardInfo[]> {
 
 export async function getDashboard(slug: string): Promise<DashboardDetail> {
   const resp = await fetch(`${API_BASE}/api/dashboards/${slug}`);
-  if (!resp.ok) throw new Error("Дашборд не найден");
+  if (!resp.ok) throw new Error(translate(getLang(), "api.dashNotFound"));
   return resp.json();
 }
 
@@ -445,7 +447,7 @@ export async function authDashboard(slug: string, password: string): Promise<{ t
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password }),
   });
-  if (!resp.ok) throw new Error("Неверный пароль");
+  if (!resp.ok) throw new Error(translate(getLang(), "api.wrongPassword"));
   return resp.json();
 }
 
@@ -457,7 +459,7 @@ export async function queryDashboard(slug: string, filters: Record<string, unkno
     headers,
     body: JSON.stringify({ filters }),
   });
-  if (!resp.ok) throw new Error("Ошибка запроса");
+  if (!resp.ok) throw new Error(translate(getLang(), "api.queryError"));
   return resp.json();
 }
 
@@ -599,8 +601,8 @@ export async function uploadDbtManifest(file: File): Promise<Record<string, numb
   fd.append("file", file);
   const resp = await fetch(`${API_BASE}/api/metadata/dbt`, { method: "POST", body: fd, credentials: "include" });
   if (!resp.ok) {
-    const d = await resp.json().catch(() => ({ detail: "Ошибка" }));
-    throw new Error(d.detail || "Ошибка загрузки dbt");
+    const d = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(d.detail || translate(getLang(), "api.dbtUpload"));
   }
   return resp.json();
 }
@@ -609,7 +611,7 @@ export async function uploadDbtSemantic(file: File): Promise<{ success: boolean;
   const fd = new FormData();
   fd.append("file", file);
   const resp = await fetch(`${API_BASE}/api/metadata/dbt/semantic`, { method: "POST", body: fd, credentials: "include" });
-  if (!resp.ok) throw new Error("Ошибка загрузки semantic models");
+  if (!resp.ok) throw new Error(translate(getLang(), "api.semanticUpload"));
   return resp.json();
 }
 
@@ -621,8 +623,8 @@ export async function syncDataHub(limit = 100): Promise<{ success?: boolean; syn
     credentials: "include",
   });
   if (!resp.ok) {
-    const d = await resp.json().catch(() => ({ detail: "Ошибка" }));
-    throw new Error(d.detail || "Ошибка синхронизации DataHub");
+    const d = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(d.detail || translate(getLang(), "api.datahubSync"));
   }
   return resp.json();
 }
@@ -633,8 +635,8 @@ export async function scanTablePII(tableName: string): Promise<{ column: string;
     credentials: "include",
   });
   if (!resp.ok) {
-    const d = await resp.json().catch(() => ({ detail: "Ошибка" }));
-    throw new Error(d.detail || "Ошибка сканирования PII");
+    const d = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(d.detail || translate(getLang(), "api.piiScan"));
   }
   return resp.json();
 }
@@ -756,8 +758,8 @@ export async function generateMcpConfig(connectionIds?: number[]): Promise<McpCo
     credentials: "include",
   });
   if (!resp.ok) {
-    const d = await resp.json().catch(() => ({ detail: "Ошибка генерации конфига" }));
-    throw new Error(d.detail || "Ошибка генерации конфига");
+    const d = await resp.json().catch(() => ({ detail: "" }));
+    throw new Error(d.detail || translate(getLang(), "api.mcpConfig"));
   }
   return resp.json();
 }

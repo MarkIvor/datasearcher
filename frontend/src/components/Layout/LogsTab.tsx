@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { ScrollText, AlertTriangle, FileClock } from "lucide-react";
 import * as api from "../../api/client";
+import { useI18n } from "../../i18n";
 
 type LogType = "query" | "error" | "audit";
 
 export function LogsTab() {
+  const { t } = useI18n();
   const [logType, setLogType] = useState<LogType>("query");
   const [queryLogs, setQueryLogs] = useState<api.QueryLog[]>([]);
   const [errorLogs, setErrorLogs] = useState<api.ErrorLog[]>([]);
@@ -30,24 +32,24 @@ export function LogsTab() {
 
   return (
     <div className="sidebar-section">
-      <h4 style={{ margin: "0 0 8px" }}><ScrollText size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />Логи</h4>
+      <h4 style={{ margin: "0 0 8px" }}><ScrollText size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />{t("logs.title")}</h4>
 
       <div className="sidebar-tabs" style={{ marginBottom: 8 }}>
         <button className={`sidebar-tab ${logType === "query" ? "active" : ""}`} onClick={() => setLogType("query")}>
-          <FileClock size={10} style={{ marginRight: 3 }} />Запросы
+          <FileClock size={10} style={{ marginRight: 3 }} />{t("logs.tab.query")}
         </button>
         <button className={`sidebar-tab ${logType === "error" ? "active" : ""}`} onClick={() => setLogType("error")}>
-          <AlertTriangle size={10} style={{ marginRight: 3 }} />Ошибки
+          <AlertTriangle size={10} style={{ marginRight: 3 }} />{t("logs.tab.error")}
         </button>
         <button className={`sidebar-tab ${logType === "audit" ? "active" : ""}`} onClick={() => setLogType("audit")}>
-          Аудит
+          {t("logs.tab.audit")}
         </button>
       </div>
 
       {loading ? (
-        <p className="no-files">Загрузка…</p>
+        <p className="no-files">{t("common.loading")}</p>
       ) : logType === "query" ? (
-        queryLogs.length === 0 ? <p className="no-files">Лог запросов пуст</p> : (
+        queryLogs.length === 0 ? <p className="no-files">{t("logs.empty.query")}</p> : (
           <div className="table-list">
             {queryLogs.map((l) => (
               <div key={l.id} className="table-item" style={{ flexDirection: "column", alignItems: "stretch", padding: "6px 8px" }}>
@@ -64,7 +66,7 @@ export function LogsTab() {
           </div>
         )
       ) : logType === "error" ? (
-        errorLogs.length === 0 ? <p className="no-files">Лог ошибок пуст</p> : (
+        errorLogs.length === 0 ? <p className="no-files">{t("logs.empty.error")}</p> : (
           <div className="table-list">
             {errorLogs.map((l) => (
               <div key={l.id} className="table-item" style={{ flexDirection: "column", alignItems: "stretch", padding: "6px 8px" }}>
@@ -79,7 +81,7 @@ export function LogsTab() {
           </div>
         )
       ) : (
-        auditLogs.length === 0 ? <p className="no-files">Лог аудита пуст</p> : (
+        auditLogs.length === 0 ? <p className="no-files">{t("logs.empty.audit")}</p> : (
           <div className="table-list">
             {auditLogs.map((l) => (
               <div key={l.id} className="table-item" style={{ flexDirection: "column", alignItems: "stretch", padding: "6px 8px" }}>

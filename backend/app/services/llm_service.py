@@ -29,7 +29,7 @@ class LLMService:
             h["Authorization"] = f"Bearer {self.api_key}"
         return h
 
-    def _build_messages(self, session: Session, user_message: str) -> list[dict]:
+    def _build_messages(self, session: Session, user_message: str, lang: str = "ru") -> list[dict]:
         table_info = [
             {
                 "table_name": fi.table_name,
@@ -40,7 +40,7 @@ class LLMService:
             for fi in session.files.values()
         ]
 
-        system_prompt = build_system_prompt(table_info)
+        system_prompt = build_system_prompt(table_info, lang=lang)
 
         messages = [{"role": "system", "content": system_prompt}]
 
@@ -75,9 +75,9 @@ class LLMService:
         return recent
 
     async def chat(
-        self, session: Session, user_message: str
+        self, session: Session, user_message: str, lang: str = "ru"
     ) -> AsyncGenerator[tuple, None]:
-        messages = self._build_messages(session, user_message)
+        messages = self._build_messages(session, user_message, lang=lang)
         tools = get_tool_definitions()
         tool_iterations = 0
 

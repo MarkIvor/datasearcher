@@ -7,6 +7,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import { Download } from "lucide-react";
+import { useI18n } from "../../i18n";
 
 const CHART_COLORS = ["#C5E827", "#2C2C2C", "#919791", "#5F6B5F", "#A8B860", "#3A4A3A", "#D9E2B8", "#6E7A6E"];
 
@@ -42,6 +43,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 
 export function ChartBlock({ spec, compact }: Props) {
   const { type, title, data, xKey, yKeys, horizontal, isForecast } = spec;
+  const { t } = useI18n();
   const height = compact ? 200 : 300;
   const chartRef = useRef<HTMLDivElement>(null);
 
@@ -163,7 +165,7 @@ export function ChartBlock({ spec, compact }: Props) {
         );
 
       default:
-        return <div>Неподдерживаемый тип графика: {type}</div>;
+        return <div>{t("chart.unsupported", { type })}</div>;
     }
   };
 
@@ -171,7 +173,7 @@ export function ChartBlock({ spec, compact }: Props) {
     <div className="chart-block">
       <div className="chart-header-row">
         {title && <div className="chart-title">{title}</div>}
-        <button className="chart-png-btn" onClick={handleExportPNG} title="Сохранить PNG">
+        <button className="chart-png-btn" onClick={handleExportPNG} title={t("chart.savePng")}>
           <Download size={14} />
         </button>
       </div>

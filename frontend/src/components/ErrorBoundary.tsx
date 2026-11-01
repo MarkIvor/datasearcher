@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import { translate, getLang } from "../i18n";
 
 interface Props {
   children: ReactNode;
@@ -19,7 +20,7 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="error-boundary">Ошибка рендеринга</div>
+        <div className="error-boundary">{translate(getLang(), "errorBoundary")}</div>
       );
     }
     return this.props.children;

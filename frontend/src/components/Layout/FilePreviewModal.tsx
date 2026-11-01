@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { previewFile } from "../../api/client";
 import type { FileInfo, FilePreview } from "../../types";
+import { useI18n } from "../../i18n";
 
 interface Props {
   file: FileInfo;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function FilePreviewModal({ file, onClose }: Props) {
+  const { t, fmt } = useI18n();
   const [data, setData] = useState<FilePreview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,17 +39,16 @@ export function FilePreviewModal({ file, onClose }: Props) {
         </div>
 
         <div className="modal-body">
-          {loading && <p className="preview-loading">Загрузка данных...</p>}
-          {error && <p className="preview-error">Ошибка: {error}</p>}
+          {loading && <p className="preview-loading">{t("common.loadingData")}</p>}
+          {error && <p className="preview-error">{t("modal.preview.error", { msg: error })}</p>}
           {data && (
             <div className="preview-info">
               <span className="preview-meta">
-                {data.total_rows.toLocaleString()} строк &middot;{" "}
-                {data.columns.length} колонок
+                {t("modal.preview.rows", { rows: fmt(data.total_rows), cols: data.columns.length })}
               </span>
               {data.total_rows > 50 && (
                 <span className="preview-note">
-                  Показано первых 50 строк
+                  {t("modal.preview.first50")}
                 </span>
               )}
             </div>

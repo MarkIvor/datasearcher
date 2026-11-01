@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Link2, Copy, Check } from "lucide-react";
 import * as api from "../../api/client";
+import { useI18n } from "../../i18n";
 
 interface Props {
   onClose: () => void;
@@ -15,6 +16,7 @@ const BI_TOOLS = [
 ];
 
 export function BILinkModal({ onClose }: Props) {
+  const { t } = useI18n();
   const [tool, setTool] = useState("superset");
   const [baseUrl, setBaseUrl] = useState("");
   const [dashboardId, setDashboardId] = useState("");
@@ -30,7 +32,7 @@ export function BILinkModal({ onClose }: Props) {
     setError("");
     setUrl("");
     if (!baseUrl) {
-      setError("Укажите базовый URL");
+      setError(t("modal.bi.baseUrlRequired"));
       return;
     }
     let params: Record<string, string> | undefined;
@@ -38,7 +40,7 @@ export function BILinkModal({ onClose }: Props) {
       try {
         params = JSON.parse(paramsText);
       } catch {
-        setError("params должен быть валидным JSON");
+        setError(t("modal.bi.paramsJson"));
         return;
       }
     }
@@ -67,38 +69,38 @@ export function BILinkModal({ onClose }: Props) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" style={{ maxWidth: 520 }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3><Link2 size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />BI Link Builder</h3>
+          <h3><Link2 size={16} style={{ marginRight: 6, verticalAlign: "middle" }} />{t("modal.bi.title")}</h3>
           <button className="modal-close" onClick={onClose}><X size={18} /></button>
         </div>
         <div className="modal-body">
           <div className="form-group">
-            <label>BI-инструмент</label>
+            <label>{t("modal.bi.tool")}</label>
             <select value={tool} onChange={(e) => setTool(e.target.value)} className="form-input">
-              {BI_TOOLS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {BI_TOOLS.map((bi) => <option key={bi.value} value={bi.value}>{bi.label}</option>)}
             </select>
           </div>
           <div className="form-group">
-            <label>Базовый URL</label>
+            <label>{t("modal.bi.baseUrl")}</label>
             <input className="form-input" placeholder="https://superset.company.com" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} />
           </div>
           <div className="form-group">
-            <label>ID дашборда / чарта</label>
+            <label>{t("modal.bi.dashId")}</label>
             <input className="form-input" placeholder="5" value={dashboardId} onChange={(e) => setDashboardId(e.target.value)} />
           </div>
           {showTime && (
             <div style={{ display: "flex", gap: 8 }}>
               <div className="form-group" style={{ flex: 1 }}>
-                <label>С (для Grafana)</label>
+                <label>{t("modal.bi.timeFrom")}</label>
                 <input className="form-input" placeholder="2024-01-01" value={timeFrom} onChange={(e) => setTimeFrom(e.target.value)} />
               </div>
               <div className="form-group" style={{ flex: 1 }}>
-                <label>По</label>
+                <label>{t("modal.bi.timeTo")}</label>
                 <input className="form-input" placeholder="2024-02-01" value={timeTo} onChange={(e) => setTimeTo(e.target.value)} />
               </div>
             </div>
           )}
           <div className="form-group">
-            <label>Фильтры (JSON)</label>
+            <label>{t("modal.bi.filters")}</label>
             <textarea className="form-input" rows={4} style={{ fontFamily: "monospace", fontSize: 12 }} value={paramsText} onChange={(e) => setParamsText(e.target.value)} />
           </div>
 
@@ -106,7 +108,7 @@ export function BILinkModal({ onClose }: Props) {
 
           {url && (
             <div style={{ border: "1px dashed var(--border-dashed)", borderRadius: 14, padding: 8, marginBottom: 8, background: "var(--surface-idle)" }}>
-              <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>Сгенерированная ссылка:</div>
+              <div style={{ fontSize: 11, opacity: 0.7, marginBottom: 4 }}>{t("modal.bi.generated")}</div>
               <div style={{ display: "flex", gap: 6, alignItems: "flex-start" }}>
                 <code style={{ fontSize: 11, wordBreak: "break-all", flex: 1 }}>{url}</code>
                 <button className="admin-add-btn" style={{ marginBottom: 0, padding: "4px 8px", flexShrink: 0 }} onClick={copyUrl}>
@@ -117,7 +119,7 @@ export function BILinkModal({ onClose }: Props) {
           )}
 
           <button className="btn-primary" style={{ width: "100%" }} onClick={handleBuild} disabled={loading}>
-            {loading ? "Генерация…" : "Сгенерировать ссылку"}
+            {loading ? t("modal.bi.generating") : t("modal.bi.generate")}
           </button>
         </div>
       </div>

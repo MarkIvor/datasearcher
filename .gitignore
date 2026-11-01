@@ -29,6 +29,7 @@ backend/static/
 node_modules/
 frontend/dist/
 frontend/.vite/
+backend/frontend_dist/
 
 # ── IDE ─────────────────────────────────────
 .vscode/

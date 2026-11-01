@@ -37,7 +37,7 @@ async def chat(request: Request, body: ChatRequest, user: User = Depends(get_opt
 
     async def event_stream():
         try:
-            async for event in llm_service.chat(session, body.message):
+            async for event in llm_service.chat(session, body.message, lang=getattr(body, "lang", "ru") or "ru"):
                 if await request.is_disconnected():
                     break
                 if event[0] == "token":

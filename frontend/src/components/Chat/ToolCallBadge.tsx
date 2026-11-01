@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, Loader2, CheckCircle, XCircle, Copy } from "lucide-react";
 import { useState } from "react";
 import type { MessageBlock } from "../../types";
+import { useI18n } from "../../i18n";
 
 interface Props {
   toolCall: Extract<MessageBlock, { type: "tool_call" }>;
@@ -25,33 +26,11 @@ const TOOL_ICONS: Record<string, string> = {
   semantic_search: "🧬",
 };
 
-const TOOL_LABELS: Record<string, string> = {
-  get_schema: "Схема", sql_query: "SQL", profile_data: "Профиль",
-  classify_rows: "Классификация", find_duplicates: "Дубликаты",
-  detect_anomalies: "Аномалии", sample_data: "Выборка",
-  correlation_analysis: "Корреляция", distribution_analysis: "Распределение",
-  cross_tab: "Кросс-таб", pivot_table: "Сводная", segment_data: "Сегментация",
-  compare_tables: "Сравнение", time_analysis: "Временной ряд",
-  data_quality_report: "Качество", smart_summary: "Саммари",
-  generate_sql: "Генерация SQL", visualize_data: "График",
-  predict_trend: "Прогноз", cluster_analysis: "Кластеры",
-  feature_importance: "Важность", statistical_test: "Стат. тест",
-  auto_insights: "Инсайты", transform_data: "Трансформация",
-  merge_tables: "Merge", export_data: "Экспорт",
-  detect_patterns: "Паттерны", build_dashboard: "Дашборд",
-  data_story: "История", create_public_dashboard: "Публ. дашборд",
-  query_explain: "EXPLAIN", attach_database: "Подключение БД", refresh_schema: "Обновление схемы",
-  test_connection: "Тест подключения", load_file: "Загрузка файла", scan_pii: "Скан PII",
-  get_logs: "Логи", add_example: "Добавить пример", search_knowledge: "Поиск по KB",
-  load_dbt: "Загрузка dbt", sync_datahub: "Синхр. DataHub", list_metrics: "Метрики",
-  update_metadata: "Метаданные", build_bi_link: "BI-ссылка", export_xlsx: "Экспорт XLSX",
-  semantic_search: "Семантический поиск",
-};
-
 export function ToolCallBadge({ toolCall }: Props) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
-  const label = TOOL_LABELS[toolCall.name] || toolCall.name;
+  const label = t(`tool.${toolCall.name}`);
   const icon = TOOL_ICONS[toolCall.name] || "🔧";
 
   const statusIcon =
@@ -90,19 +69,19 @@ export function ToolCallBadge({ toolCall }: Props) {
         {sqlArg && (
           <button className="tool-copy-btn" onClick={(e) => { e.stopPropagation(); handleCopy(); }}>
             <Copy size={11} />
-            {copied && <span className="copied-label">Скопировано</span>}
+            {copied && <span className="copied-label">{t("common.copied")}</span>}
           </button>
         )}
       </div>
       {expanded && (
         <div className="tool-call-detail">
           <div className="tool-call-section">
-            <strong>Аргументы</strong>
+            <strong>{t("tool.args")}</strong>
             <pre>{JSON.stringify(toolCall.args, null, 2)}</pre>
           </div>
           {toolCall.result && (
             <div className="tool-call-section">
-              <strong>Результат</strong>
+              <strong>{t("tool.result")}</strong>
               <pre>
                 {toolCall.result.length > 2000
                   ? toolCall.result.slice(0, 2000) + "…"

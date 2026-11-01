@@ -1,6 +1,7 @@
 import type { ChatMessage, MessageBlock } from "../types/index";
 import { fetchChatStream } from "../api/client";
 import { useState, useRef, useCallback } from "react";
+import { useI18n, type Translate } from "../i18n";
 
 let msgId = 0;
 function nextId() {
@@ -14,6 +15,7 @@ interface ToolCallEntry {
 }
 
 export function useChat(columnHints?: { name: string; type: string }[]) {
+  const { lang, t } = useI18n();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
@@ -115,7 +117,8 @@ export function useChat(columnHints?: { name: string; type: string }[]) {
         for await (const event of fetchChatStream(
           content,
           sessionIdRef.current || undefined,
-          controller.signal
+          controller.signal,
+          lang
         )) {
           switch (event.type) {
             case "token":
@@ -168,12 +171,12 @@ export function useChat(columnHints?: { name: string; type: string }[]) {
 
             case "export":
               appendText(
-                `\n\n📥 [Скачать ${event.filename}](${window.location.origin}/api/chat/export/${event.export_id}) (${event.rows} строк)`
+                `\n\n📥 [${t("chat.download")} ${event.filename}](${window.location.origin}/api/chat/export/${event.export_id}) (${event.rows} ${t("chat.exportRows")})`
               );
               break;
 
             case "error":
-              appendText(`\n\nОшибка: ${event.error}`);
+              appendText(`\n\n${t("common.error")}: ${event.error}`);
               updateAssistant((m) => ({ ...m, isStreaming: false }));
               break;
 
@@ -190,7 +193,7 @@ export function useChat(columnHints?: { name: string; type: string }[]) {
                     (b) => b.type === "text" && b.content.trim()
                   ) || cleanedBlocks.some((b) => b.type === "chart");
                 const quickActions = hasUsefulContent
-                  ? generateQuickActions(cleanedBlocks, columnHints)
+                  ? generateQuickActions(cleanedBlocks, t, columnHints)
                   : undefined;
                 return {
                   ...m,
@@ -206,14 +209,14 @@ export function useChat(columnHints?: { name: string; type: string }[]) {
         if (err instanceof DOMException && err.name === "AbortError") {
           return;
         }
-        appendText(`\n\nОшибка подключения: ${err}`);
+        appendText(`\n\n${t("common.error")}: ${err}`);
         updateAssistant((m) => ({ ...m, isStreaming: false }));
       } finally {
         abortRef.current = null;
         setIsStreaming(false);
-      }
-    },
-    []
+        }
+      },
+    [lang, t]
   );
 
   const clearMessages = useCallback(() => {
@@ -224,7 +227,7 @@ export function useChat(columnHints?: { name: string; type: string }[]) {
   return { messages, isStreaming, sendMessage, clearMessages, setSessionId, abort };
 }
 
-export function generateQuickActions(blocks: MessageBlock[], columnHints?: { name: string; type: string }[]): string[] {
+export function generateQuickActions(blocks: MessageBlock[], t: Translate, columnHints?: { name: string; type: string }[]): string[] {
   const actions: string[] = [];
   const allText = blocks
     .filter((b): b is Extract<typeof b, { type: "text" }> => b.type === "text")
@@ -238,28 +241,28 @@ export function generateQuickActions(blocks: MessageBlock[], columnHints?: { nam
   const hasNumCol = columnHints?.some((c) => /int|float|double|decimal|numeric|real/i.test(c.type));
 
   if (hasDateCol) {
-    actions.push("📈 Показать тренд");
-    actions.push("🔮 Спрогнозировать на 3 месяца");
+    actions.push(t("progress.trend"));
+    actions.push(t("progress.forecast"));
   }
   if (hasNumCol) {
-    actions.push("📊 Визуализировать графиком");
-    actions.push("🔗 Найти корреляции");
+    actions.push(t("progress.visualize"));
+    actions.push(t("progress.correlations"));
   }
   if (hasCatCol) {
-    actions.push("⊞ Кросс-табуляция");
-    actions.push("🎯 Кластеризация");
+    actions.push(t("progress.crossTab"));
+    actions.push(t("progress.cluster"));
   }
-  if (/аномал|выброс|outlier/i.test(allText)) {
-    actions.push("🧪 Статистический тест");
+  if (/аномал|выброс|outlier|anomal/i.test(allText)) {
+    actions.push(t("progress.statTest"));
   }
   if (actions.length === 0) {
-    actions.push("✨ Авто-инсайты");
-    actions.push("✅ Качество данных");
+    actions.push(t("progress.autoInsights"));
+    actions.push(t("progress.quality"));
   }
-  if (!hasChart && !actions.some((a) => a.includes("Визуализи"))) {
-    actions.push("📊 Визуализировать");
+  if (!hasChart && !actions.some((a) => a.includes("Визуализи") || a.includes("Visualize"))) {
+    actions.push(t("progress.visualize2"));
   }
-  actions.push("📖 История данных");
-  actions.push("📋 Создай публичный дашборд через create_public_dashboard");
+  actions.push(t("progress.story"));
+  actions.push(t("progress.publicDash"));
   return actions.slice(0, 6);
 }

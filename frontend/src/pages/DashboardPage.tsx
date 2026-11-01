@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Lock, Eye, RefreshCw, ExternalLink, Copy, Check } from "lucide-react";
 import * as api from "../api/client";
+import { useI18n } from "../i18n";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -19,6 +20,7 @@ function formatValue(val: number | null | undefined, fmt?: string, prefix?: stri
 }
 
 export function DashboardPage() {
+  const { t } = useI18n();
   const { slug } = useParams<{ slug: string }>();
   const [dash, setDash] = useState<api.DashboardDetail | null>(null);
   const [cards, setCards] = useState<api.DashboardCard[]>([]);
@@ -57,7 +59,7 @@ export function DashboardPage() {
       setToken(r.token);
       loadCards(slug, filters, r.token);
     } catch {
-      setPasswordError("Неверный пароль");
+      setPasswordError(t("dash.wrongPassword"));
     }
   };
 
@@ -73,7 +75,7 @@ export function DashboardPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) return <div className="dash-page"><div className="dash-loader"><RefreshCw className="spin" size={24} /> Загрузка...</div></div>;
+  if (loading) return <div className="dash-page"><div className="dash-loader"><RefreshCw className="spin" size={24} /> {t("dash.loading")}</div></div>;
 
   if (dash?.has_password && !token) {
     return (
@@ -81,10 +83,10 @@ export function DashboardPage() {
         <div className="dash-lock">
           <Lock size={32} />
           <h2>{dash.title}</h2>
-          <p>Этот дашборд защищён паролем</p>
+          <p>{t("dash.protected")}</p>
           <form onSubmit={handlePasswordSubmit}>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Введите пароль" autoFocus />
-            <button type="submit">Войти</button>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("dash.password")} autoFocus />
+            <button type="submit">{t("dash.login")}</button>
           </form>
           {passwordError && <div className="dash-lock-error">{passwordError}</div>}
         </div>
@@ -92,7 +94,7 @@ export function DashboardPage() {
     );
   }
 
-  if (!dash) return <div className="dash-page"><div className="dash-loader">Дашборд не найден</div></div>;
+  if (!dash) return <div className="dash-page"><div className="dash-loader">{t("dash.notFound")}</div></div>;
 
   const selectors = dash.config.selectors || [];
   const kpis = cards.filter((c) => c.type === "kpi");
@@ -107,12 +109,12 @@ export function DashboardPage() {
         <div className="dash-title-row">
           <h1 className="dash-title">{dash.title}</h1>
           <div className="dash-header-actions">
-            {activeFilters > 0 && <span className="dash-filter-badge">{activeFilters} фильтр</span>}
+            {activeFilters > 0 && <span className="dash-filter-badge">{t("dash.filters", { n: activeFilters })}</span>}
             <span className="dash-views"><Eye size={13} /> {dash.views}</span>
-            <button className="dash-icon-btn" onClick={handleCopyLink} title="Скопировать ссылку">
+            <button className="dash-icon-btn" onClick={handleCopyLink} title={t("dash.copyLink")}>
               {copied ? <Check size={14} /> : <Copy size={14} />}
             </button>
-            <button className="dash-icon-btn" onClick={() => slug && loadCards(slug, filters, token || undefined)} disabled={refreshing} title="Обновить">
+            <button className="dash-icon-btn" onClick={() => slug && loadCards(slug, filters, token || undefined)} disabled={refreshing} title={t("dash.refresh")}>
               <RefreshCw size={14} className={refreshing ? "spin" : ""} />
             </button>
           </div>
@@ -195,7 +197,7 @@ export function DashboardPage() {
 
       <div className="dash-footer">
         <span>DataSearcher</span>
-        <a href="/" className="dash-footer-link">Создать свой дашборд <ExternalLink size={10} /></a>
+        <a href="/" className="dash-footer-link">{t("dash.footer.create")} <ExternalLink size={10} /></a>
       </div>
     </div>
   );
@@ -207,6 +209,7 @@ function DashSelector({ slug, selector, value, onChange }: {
   value: unknown;
   onChange: (v: unknown) => void;
 }) {
+  const { t } = useI18n();
   const [options, setOptions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -223,7 +226,7 @@ function DashSelector({ slug, selector, value, onChange }: {
       <div className="dash-sel">
         <label className="dash-sel-label">{selector.label}</label>
         <select className="dash-sel-input" value={(value as string) || ""} onChange={(e) => onChange(e.target.value || null)}>
-          <option value="">Все</option>
+          <option value="">{t("dash.all")}</option>
           {options.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
       </div>
@@ -262,6 +265,7 @@ function DashSelector({ slug, selector, value, onChange }: {
 }
 
 function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Record<string, unknown>[]; x: string; y: string }) {
+  const { t } = useI18n();
   const safeData = data.map((d) => ({ ...d, [y]: Number(d[y]) || 0, [x]: d[x] ?? "" }));
   const axisStyle = { fontSize: 11, fill: "#7A7F7A", fontWeight: 500 };
 
@@ -331,5 +335,5 @@ function ChartRenderer({ chartType, data, x, y }: { chartType: string; data: Rec
     );
   }
 
-  return <div className="dash-chart-fallback">Тип графика: {chartType}</div>;
+  return <div className="dash-chart-fallback">{t("chart.unsupported", { type: chartType })}</div>;
 }

@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ArrowUp, ArrowDown, Search, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import Markdown from "react-markdown";
+import { useI18n } from "../../i18n";
 
 function InlineMd({ text }: { text: string }) {
   return <Markdown components={{ p: "span", code: "code", em: "em", strong: "strong", del: "del" }}>{text}</Markdown>;
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function InteractiveTable({ headers, rows, title }: Props) {
+  const { t } = useI18n();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
 
@@ -103,7 +105,7 @@ export function InteractiveTable({ headers, rows, title }: Props) {
       <div className="itable-header">
         {title && <span className="itable-title">{title}</span>}
         <span className="itable-count">
-          {rows.length} строк &times; {safeHeaders.length} колонок
+          {t("table.rowsCols", { rows: rows.length, cols: safeHeaders.length })}
         </span>
         <div className="itable-controls">
           <div className="itable-search">
@@ -112,10 +114,10 @@ export function InteractiveTable({ headers, rows, title }: Props) {
               type="text"
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
-              placeholder="Поиск..."
+              placeholder={t("table.search")}
             />
           </div>
-          <button className="itable-btn" onClick={handleCopyCSV} title="Копировать CSV">
+          <button className="itable-btn" onClick={handleCopyCSV} title={t("table.copyCsv")}>
             <Download size={13} />
           </button>
         </div>
@@ -163,7 +165,7 @@ export function InteractiveTable({ headers, rows, title }: Props) {
             {table.getRowModel().rows.length === 0 && (
               <tr>
                 <td colSpan={safeHeaders.length + 1} className="itable-empty">
-                  Ничего не найдено
+                  {t("table.nothing")}
                 </td>
               </tr>
             )}

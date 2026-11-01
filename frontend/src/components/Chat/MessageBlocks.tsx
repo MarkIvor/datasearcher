@@ -9,6 +9,7 @@ import { LayoutDashboard, ExternalLink, Lock, Copy, Check } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useState } from "react";
+import { useI18n } from "../../i18n";
 
 interface Props {
   message: MessageBlock[];
@@ -45,6 +46,7 @@ function SmartContent({ content }: { content: string }) {
 
 function DashboardCardBlock({ slug, title, url, hasPassword }: { slug: string; title: string; url: string; hasPassword: boolean }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
   const dashUrl = url || `${window.location.origin}/d/${slug}`;
 
   const handleCopy = () => {
@@ -59,8 +61,8 @@ function DashboardCardBlock({ slug, title, url, hasPassword }: { slug: string; t
       <div className="dash-chat-card-info">
         <div className="dash-chat-card-title">{title}</div>
         <div className="dash-chat-card-meta">
-          {hasPassword && <><Lock size={11} /> Защищён паролем ·</>}
-          Публичная ссылка
+          {hasPassword && <><Lock size={11} /> {t("chat.dashPassword")}</>}
+          {t("chat.dashPublic")}
         </div>
       </div>
       <div className="dash-chat-card-url">
@@ -70,7 +72,7 @@ function DashboardCardBlock({ slug, title, url, hasPassword }: { slug: string; t
         </button>
       </div>
       <a href={`/d/${slug}`} target="_blank" rel="noopener" className="dash-chat-open">
-        Открыть <ExternalLink size={12} />
+        {t("chat.openDash")} <ExternalLink size={12} />
       </a>
     </div>
   );
@@ -87,6 +89,7 @@ function ThinkingDots() {
 }
 
 export function MessageBlocks({ message: blocks, isUser, isStreaming, isStopped }: Props) {
+  const { t } = useI18n();
   const hasContent = blocks.some((b) => b.type === "text" && b.content.trim());
   const isEmpty = blocks.length === 0;
 
@@ -120,7 +123,7 @@ export function MessageBlocks({ message: blocks, isUser, isStreaming, isStopped 
         return null;
       })}
       {isStreaming && hasContent && <span className="cursor">|</span>}
-      {isStopped && <div className="stopped-label">Остановлено</div>}
+      {isStopped && <div className="stopped-label">{t("chat.stopped")}</div>}
     </>
   );
 }
