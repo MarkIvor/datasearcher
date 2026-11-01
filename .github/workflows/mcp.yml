@@ -1,0 +1,49 @@
+name: MCP Smoke
+
+on:
+  push:
+    branches: [main]
+    paths: ["mcp/**", ".github/workflows/mcp.yml"]
+  pull_request:
+    branches: [main]
+    paths: ["mcp/**", ".github/workflows/mcp.yml"]
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MCP package
+        working-directory: mcp
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[all]"
+
+      - name: CLI --help
+        working-directory: mcp
+        run: datasearcher-mcp --help
+
+      - name: Import tools registry
+        run: |
+          python - <<'EOF'
+          import asyncio
+          from datasearcher_mcp.server import mcp
+
+          async def check():
+              tools = await mcp.list_tools()
+              resources = await mcp.list_resources()
+              print(f"tools registered: {len(tools)}, resources: {len(resources)}")
+              assert len(tools) >= 40, f"expected 46 tools, got {len(tools)}"
+              print("MCP server import OK")
+
+          asyncio.run(check())
+          EOF
